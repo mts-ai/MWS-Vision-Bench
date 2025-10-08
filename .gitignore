@@ -1,0 +1,45 @@
+# Python
+*/__pycache__/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches
+*.pyo
+*.pyd
+*.pdb
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# MacOS
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+*.csv
+*.tsv
+*.xls
+*.xls
+*.log
+
+# Results and logs (experimental data)
+logs/
+results/
+
+# Local data files (use HuggingFace datasets instead)
+data/
+!data/.gitkeep
+
+# HuggingFace cache (optional)
+hf_cache/
+.cache/
+
+# Dataset prepared (for HF upload script)
+dataset_prepared/
+
+*.json
+*.pyc
+*/*.pyc
