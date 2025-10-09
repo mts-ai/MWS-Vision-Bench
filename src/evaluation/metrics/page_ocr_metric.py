@@ -10,11 +10,11 @@ import jieba
 import re
 from nltk.translate import meteor_score
 
-# Проверка и загрузка необходимых ресурсов NLTK
+# Проверка и загрузка необходимых ресурсов NLTK (тихо, без вывода в лог)
 try:
     nltk.data.find('corpora/wordnet')
 except LookupError:
-    nltk.download('wordnet')
+    nltk.download('wordnet', quiet=True)
 
 
 def contain_chinese_string(text):
