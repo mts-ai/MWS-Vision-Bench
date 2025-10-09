@@ -10,7 +10,7 @@ import jieba
 import re
 from nltk.translate import meteor_score
 
-# Проверка и загрузка необходимых ресурсов NLTK (тихо, без вывода в лог)
+# Ensure NLTK wordnet is available (download silently if missing)
 try:
     nltk.data.find('corpora/wordnet')
 except LookupError:
