@@ -10,6 +10,12 @@ import jieba
 import re
 from nltk.translate import meteor_score
 
+# Проверка и загрузка необходимых ресурсов NLTK
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet')
+
 
 def contain_chinese_string(text):
     chinese_pattern = re.compile(r'[\u4e00-\u9fa5]')
