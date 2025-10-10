@@ -36,6 +36,7 @@ class GigaChatInference(InferenceBase):
         super().__init__('gigachat')
         self.client = None
         self.api_key = None
+        self.streaming_supported = None  # Will be determined on first request
     
     def get_default_model(self) -> str:
         return "GigaChat-Max"
@@ -121,17 +122,67 @@ class GigaChatInference(InferenceBase):
         # GigaChat API supports: temperature, top_p, max_tokens, repetition_penalty, stream
         # https://developers.sber.ru/docs/ru/gigachat/api/grpc/grpc-methods
         
+        # Try streaming first (if not explicitly disabled), fallback to non-streaming if not supported
+        # Streaming advantages:
+        # - Connection stays active with continuous data flow
+        # - Server doesn't think client disconnected during long processing
+        # - Ideal for long OCR tasks that take minutes to complete
+        
+        # Determine if we should try streaming
+        use_streaming = self.streaming_supported is not False  # Try if unknown or True
+        
         max_retries = 2
         for attempt in range(max_retries):
             try:
-                response = self.client.chat(payload)
-                answer = response.choices[0].message.content.strip()
-                item_result = item.copy()
-                item_result["predict"] = answer
-                return item_result
+                # Set streaming mode in payload
+                current_payload = payload.copy()
+                if use_streaming:
+                    current_payload["stream"] = True
+                
+                if use_streaming:
+                    # Mark streaming as supported (first successful use)
+                    if self.streaming_supported is None:
+                        self.streaming_supported = True
+                        logging.info("✓ Streaming mode enabled and working for GigaChat")
+                    
+                    # Process stream
+                    answer = ""
+                    try:
+                        for chunk in self.client.stream(current_payload):
+                            if chunk.choices and len(chunk.choices) > 0:
+                                delta = chunk.choices[0].delta
+                                if hasattr(delta, 'content') and delta.content:
+                                    answer += delta.content
+                        
+                        if answer:
+                            item_result = item.copy()
+                            item_result["predict"] = answer.strip()
+                            return item_result
+                    except Exception as stream_error:
+                        # If streaming fails, try to detect if it's unsupported
+                        error_msg = str(stream_error).lower()
+                        if 'stream' in error_msg or 'not supported' in error_msg:
+                            # Streaming not supported, switch to non-streaming permanently
+                            self.streaming_supported = False
+                            use_streaming = False
+                            logging.warning("⚠ Streaming not supported by GigaChat, switching to non-streaming mode")
+                            continue  # Retry with non-streaming
+                        else:
+                            # Other error, re-raise
+                            raise
+                else:
+                    # Non-streaming mode
+                    response = self.client.chat(current_payload)
+                    answer = response.choices[0].message.content.strip()
+                    item_result = item.copy()
+                    item_result["predict"] = answer
+                    return item_result
             except Exception as e:
-                logging.error(f"[ERROR] Exception during request (attempt {attempt + 1}): {e}, image path:{image_path}, question: {question}")
-            time.sleep(10)
+                logging.error(f"[ERROR] Exception during request (attempt {attempt + 1}/{max_retries}): {e}, image path:{image_path}, question: {question}")
+            
+            # Wait before retry
+            if attempt < max_retries - 1:
+                time.sleep(10)
         
         item_result = item.copy()
         item_result["predict"] = "ERROR in getting response"
