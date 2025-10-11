@@ -90,6 +90,7 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 | gpt-4.1-nano | 0.503 | 0.676 | 0.672 | 0.028 | 0.567 | 0.573 |
 | gpt-5-nano | 0.503 | 0.487 | 0.583 | 0.091 | 0.661 | 0.693 |
 | Qwen2.5-VL-3B | 0.402 | 0.613 | 0.654 | 0.045 | 0.203 | 0.494 |
+| Pixtral-12B-2409 | 0.342 | 0.327 | 0.555 | 0.026 | 0.325 | 0.475 |
 
 ### 🔒 Test Set (Private)
 
@@ -114,6 +115,7 @@ Results on our held-out private test dataset:
 | gpt-5-nano | 0.499 | 0.519 | 0.606 | 0.090 | 0.598 | 0.681 |
 | gpt-4.1-nano | 0.480 | 0.686 | 0.640 | 0.025 | 0.555 | 0.511 |
 | Qwen2.5-VL-3B | 0.409 | 0.631 | 0.688 | 0.026 | 0.232 | 0.469 |
+| Pixtral-12B-2409 | 0.329 | 0.302 | 0.539 | 0.032 | 0.364 | 0.410 |
 
 *Scale: 0.0 - 1.0 (higher is better)*
 
