@@ -27,7 +27,8 @@ class InferenceBase(ABC):
         'openai': {'temperature', 'top_p', 'presence_penalty', 'frequency_penalty', 'max_tokens'},
         'gigachat': {'temperature', 'top_p', 'max_tokens', 'repetition_penalty'},  # Fixed based on official docs
         'responses': {'max_tokens'},  # GPT-5 has very limited params
-        'local': {'temperature', 'top_p', 'max_tokens'}
+        'local': {'temperature', 'top_p', 'max_tokens'},
+        'aliceaivlm': {}, # Yandex public API filters out any params
     }
     
     def __init__(self, api_type: str):
