@@ -14,6 +14,9 @@ from pathlib import Path
 
 # Third-party imports
 import requests
+import urllib3
+# Disable SSL warnings for insecure requests to yangdex.ru
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Local application imports
 # Add project root to Python path for imports
