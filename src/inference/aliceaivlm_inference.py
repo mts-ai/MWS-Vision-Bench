@@ -25,8 +25,7 @@ from src.inference.api_inference import OpenAIInference
 
 class AliceAiVlmInference(OpenAIInference):
     def __init__(self):
-        super().__init__()
-        self.api_type = 'aliceaivlm'
+        super().__init__('aliceaivlm')
         self.client = None
         self.api_key = None
         self.streaming_supported = False
