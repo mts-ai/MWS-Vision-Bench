@@ -158,7 +158,7 @@ def run_inference_and_eval(dataset: List[Dict[str, Any]], output_prefix: str,
         inference_cmd.extend(["--max_workers", str(args.max_workers)])
 
     # Run inference up to 3 times - in case some questions will require one more attempt
-    for attempt in range(3):
+    for attempt in range(2):
         logging.info(f"Running {INFERENCE_SCRIPT} for {temp_data_path} (attempt {attempt + 1})...")
         subprocess.run(inference_cmd, check=True)
         

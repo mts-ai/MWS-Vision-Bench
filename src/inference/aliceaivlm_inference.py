@@ -48,6 +48,7 @@ class AliceAiVlmInference(OpenAIInference):
                     ensure_ascii=False,
                 )
             },
+            timeout=(10, 60),  # (connect, read) - 10s connect, 1 min read
             verify=False
         )
     

@@ -178,7 +178,7 @@ class OpenAIInference(InferenceBase):
         # Determine if we should try streaming
         use_streaming = self.streaming_supported is not False  # Try if unknown or True
         
-        max_retries = 5
+        max_retries = 2
         for attempt in range(max_retries):
             try:
                 # Set streaming mode in payload
