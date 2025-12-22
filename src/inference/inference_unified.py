@@ -22,6 +22,7 @@ sys.path.insert(0, str(project_root))
 from src.inference.api_inference import OpenAIInference
 from src.inference.gigachat_inference import GigaChatInference
 from src.inference.inference_base import InferenceBase
+from src.inference.aliceaivlm_inference import AliceAiVlmInference
 
 
 def create_inference_handler(model_name: str) -> InferenceBase:
@@ -37,7 +38,11 @@ def create_inference_handler(model_name: str) -> InferenceBase:
     # GPT-5 family (mini, nano) goes to regular OpenAI Completions API
     elif model_name.startswith('gpt-5-'):
         return OpenAIInference()
-    
+
+    # AliceAiVlm
+    elif 'aliceaivlm' in model_lower:
+        return AliceAiVlmInference()
+
     # GigaChat
     elif 'gigachat' in model_lower:
         return GigaChatInference()

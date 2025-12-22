@@ -63,6 +63,45 @@ class OpenAIInference(InferenceBase):
             "Content-Type": "application/json"
         }
     
+    def get_response(self, payload, use_streaming=False):
+        """Get answer from OpenAI API"""
+        return requests.post(
+            self.args.api_url,
+            headers=self.headers,
+            json=payload,
+            timeout=(10, 1200),  # (connect, read) - 10s connect, 20 min read
+            stream=use_streaming  # Enable streaming response in requests
+        )
+
+    def extract_answer(self, resp, use_streaming=False):
+        """Extract answer from OpenAI API response"""
+        if use_streaming:
+            # Process Server-Sent Events (SSE) stream
+            answer = ""
+            for line in resp.iter_lines():
+                if line:
+                    line_str = line.decode('utf-8')
+                    # SSE format: "data: <json>"
+                    if line_str.startswith('data: '):
+                        data_str = line_str[6:]  # Remove "data: " prefix
+                        if data_str == '[DONE]':
+                            # Stream finished
+                            break
+                        try:
+                            chunk = json.loads(data_str)
+                            # Extract content delta from chunk
+                            if 'choices' in chunk and len(chunk['choices']) > 0:
+                                delta = chunk['choices'][0].get('delta', {})
+                                if 'content' in delta:
+                                    answer += delta['content']
+                        except json.JSONDecodeError:
+                            # Skip malformed chunks
+                            continue
+        else:
+            # Process regular response
+            answer = resp.json()["choices"][0]["message"]["content"].strip()
+        return answer
+
     def process_item(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Process a single item using OpenAI-compatible API"""
         if item["id"] in self.processed_ids:
@@ -147,14 +186,7 @@ class OpenAIInference(InferenceBase):
                 if use_streaming:
                     current_payload["stream"] = True
                 
-                resp = requests.post(
-                    self.args.api_url,
-                    headers=self.headers,
-                    json=current_payload,
-                    timeout=(10, 1200),  # (connect, read) - 10s connect, 20 min read
-                    stream=use_streaming  # Enable streaming response in requests
-                )
-                
+                resp = self.get_response(current_payload)
                 if resp.status_code == 200:
                     if use_streaming:
                         # Mark streaming as supported (first successful use)
@@ -162,36 +194,13 @@ class OpenAIInference(InferenceBase):
                             self.streaming_supported = True
                             logging.info("✓ Streaming mode enabled and working")
                         
-                        # Process Server-Sent Events (SSE) stream
-                        answer = ""
-                        for line in resp.iter_lines():
-                            if line:
-                                line_str = line.decode('utf-8')
-                                # SSE format: "data: <json>"
-                                if line_str.startswith('data: '):
-                                    data_str = line_str[6:]  # Remove "data: " prefix
-                                    if data_str == '[DONE]':
-                                        # Stream finished
-                                        break
-                                    try:
-                                        chunk = json.loads(data_str)
-                                        # Extract content delta from chunk
-                                        if 'choices' in chunk and len(chunk['choices']) > 0:
-                                            delta = chunk['choices'][0].get('delta', {})
-                                            if 'content' in delta:
-                                                answer += delta['content']
-                                    except json.JSONDecodeError:
-                                        # Skip malformed chunks
-                                        continue
-                        
+                        answer = self.extract_answer(resp, use_streaming=True)
                         if answer:
                             item_result = item.copy()
                             item_result["predict"] = answer.strip()
                             return item_result
                     else:
-                        # Non-streaming mode
-                        resp_json = resp.json()
-                        answer = resp_json["choices"][0]["message"]["content"].strip()
+                        answer = self.extract_answer(resp, use_streaming=False)
                         item_result = item.copy()
                         item_result["predict"] = answer
                         return item_result
