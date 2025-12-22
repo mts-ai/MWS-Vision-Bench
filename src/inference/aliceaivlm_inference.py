@@ -14,6 +14,9 @@ from pathlib import Path
 
 # Third-party imports
 import requests
+import urllib3
+# Disable SSL warnings for insecure requests to yangdex.ru
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Local application imports
 # Add project root to Python path for imports
@@ -25,8 +28,7 @@ from src.inference.api_inference import OpenAIInference
 
 class AliceAiVlmInference(OpenAIInference):
     def __init__(self):
-        super().__init__()
-        self.api_type = 'aliceaivlm'
+        super().__init__('aliceaivlm')
         self.client = None
         self.api_key = None
         self.streaming_supported = False
@@ -46,6 +48,7 @@ class AliceAiVlmInference(OpenAIInference):
                     ensure_ascii=False,
                 )
             },
+            timeout=(10, 60),  # (connect, read) - 10s connect, 1 min read
             verify=False
         )
     

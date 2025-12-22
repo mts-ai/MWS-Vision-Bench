@@ -32,8 +32,8 @@ from src.inference.inference_base import InferenceBase
 class OpenAIInference(InferenceBase):
     """OpenAI-compatible inference implementation"""
     
-    def __init__(self):
-        super().__init__('openai')
+    def __init__(self, api_type: str = 'openai'):
+        super().__init__(api_type)
         self.api_key = None
         self.headers = None
         self.streaming_supported = None  # Will be determined on first request
@@ -178,7 +178,7 @@ class OpenAIInference(InferenceBase):
         # Determine if we should try streaming
         use_streaming = self.streaming_supported is not False  # Try if unknown or True
         
-        max_retries = 5
+        max_retries = 2
         for attempt in range(max_retries):
             try:
                 # Set streaming mode in payload
