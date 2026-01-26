@@ -73,6 +73,7 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 
 | Model | Overall | img→text | img→markdown | Grounding | KIE (JSON) | VQA |
 |-------|---------|----------|--------------|-----------|------------|-----|
+| **Claude-4.5-Opus** | 0.670 | 0.809 | 0.720 | 0.131 | 0.799 | 0.889 |
 | **GPT-5.2** | 0.663 | 0.799 | 0.656 | 0.173 | 0.855 | 0.835 |
 | **Gemini-2.5-pro** |  | 0.836 | 0.745 | 0.084 | 0.891 |  |
 | **Alice AI VLM dev** | 0.662 | 0.881 | 0.777 | 0.063 | 0.747 | 0.841 |
@@ -83,6 +84,7 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 | gpt-5-mini |  | 0.797 | 0.678 | 0.126 | 0.784 |  |
 | Qwen2.5-VL-72B |  | 0.848 | 0.712 | 0.220 | 0.644 |  |
 | gpt-5-mini (responses) |  | 0.743 | 0.567 | 0.118 | 0.811 |  |
+| Qwen3-VL-235B-A22B-Instruct | 0.623 | 0.812 | 0.668 | 0.050 | 0.755 | 0.830 |
 | GPT-5.1 | 0.588 | 0.716 | 0.680 | 0.092 | 0.670 | 0.783 |
 | Qwen3-VL-8B-Instruct | 0.584 | 0.780 | 0.700 | 0.084 | 0.592 | 0.766 |
 | Qwen3-VL-30B-A3B |  | 0.802 | 0.688 | 0.053 | 0.661 |  |
@@ -105,6 +107,7 @@ Results on our held-out private test dataset:
 
 | Model | Overall | img→text | img→markdown | Grounding | KIE (JSON) | VQA |
 |-------|---------|----------|--------------|-----------|------------|-----|
+| **Claude-4.5-Opus** | 0.676 | 0.812 | 0.698 | 0.145 | 0.812 | 0.915 |
 | **Gemini-2.5-pro** |  | 0.850 | 0.734 | 0.079 | 0.855 |  |
 | **Alice AI VLM dev** | 0.654 | 0.891 | 0.751 | 0.066 | 0.751 | 0.809 |
 | **GPT-5.2** | 0.647 | 0.806 | 0.643 | 0.156 | 0.794 | 0.835 |
@@ -114,6 +117,7 @@ Results on our held-out private test dataset:
 | Cotype VL (32B 8 bit) |  | 0.799 | 0.742 | 0.246 | 0.672 |  |
 | Qwen2.5-VL-72B-Instruct |  | 0.840 | 0.699 | 0.203 | 0.631 |  |
 | gpt-5-mini |  | 0.797 | 0.675 | 0.104 | 0.745 |  |
+| Qwen3-VL-235B-A22B-Instruct | 0.612 | 0.816 | 0.648 | 0.053 | 0.739 | 0.802 |
 | GPT-5.1 | 0.582 | 0.713 | 0.688 | 0.087 | 0.650 | 0.770 |
 | Qwen3-VL-8B-Instruct | 0.578 | 0.779 | 0.692 | 0.073 | 0.592 | 0.754 |
 | Qwen3-VL-32B-Instruct |  | 0.757 | 0.642 | 0.047 | 0.668 |  |
