@@ -20,6 +20,7 @@ def load_benchmark_datasets(
     data_paths: Optional[List[str]] = None,
     base_path: Optional[str] = None,
     hf_token: Optional[str] = None,
+    hf_revision: Optional[str] = None,
     cache_dir: Optional[str] = None,
     sample: Optional[int] = None,
     silent: bool = True
@@ -37,6 +38,7 @@ def load_benchmark_datasets(
         data_paths: Local JSON file paths (if None, use HuggingFace)
         base_path: Base path for local images (required with data_paths)
         hf_token: HuggingFace token (for private test set access)
+        hf_revision: HuggingFace dataset revision (branch or commit hash)
         cache_dir: Cache directory for HF datasets (default: ~/.cache/huggingface)
         sample: Number of samples to load (for quick testing)
         silent: If True, no warnings for missing test access
@@ -68,7 +70,7 @@ def load_benchmark_datasets(
         return _load_local_datasets(data_paths, base_path, sample)
     
     # HuggingFace mode (default)
-    return _load_hf_datasets(hf_token, cache_dir, sample, silent)
+    return _load_hf_datasets(hf_token, hf_revision, cache_dir, sample, silent)
 
 
 def _load_local_datasets(
@@ -118,6 +120,7 @@ def _load_local_datasets(
 
 def _load_hf_datasets(
     hf_token: Optional[str],
+    hf_revision: Optional[str],
     cache_dir: Optional[str],
     sample: Optional[int],
     silent: bool
@@ -126,6 +129,7 @@ def _load_hf_datasets(
     
     Args:
         hf_token: HuggingFace token for private datasets
+        hf_revision: HuggingFace dataset revision (branch or commit hash)
         cache_dir: Cache directory
         sample: Number of samples to load
         silent: Suppress warnings
@@ -158,6 +162,7 @@ def _load_hf_datasets(
         val_dataset = load_dataset(
             "MTSAIR/MWS-Vision-Bench",
             split=split_str,
+            revision=hf_revision,
             cache_dir=cache_dir,
             token=hf_token
         )
@@ -180,6 +185,7 @@ def _load_hf_datasets(
             test_dataset = load_dataset(
                 "MTSAIR/MWS-Vision-Bench-Test",
                 split=split_str,
+                revision=hf_revision,
                 cache_dir=cache_dir,
                 token=hf_token
             )
