@@ -91,7 +91,7 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 | Qwen2.5-VL-32B |  | 0.767 | 0.649 | 0.232 | 0.493 |  |
 | gpt-5 (responses) |  | 0.746 | 0.650 | 0.080 | 0.687 |  |
 | Qwen2.5-VL-7B |  | 0.779 | 0.704 | 0.185 | 0.426 |  |
-| Qwen3-VL-4B-Instruct |  | 0.707 | 0.685 | 0.063 | 0.546 |  |
+| Qwen3-VL-4B-Instruct | 0.515 | 0.699 | 0.702 | 0.061 | 0.506 | 0.607 |
 | gpt-4.1-nano |  | 0.676 | 0.672 | 0.028 | 0.567 |  |
 | gpt-5-nano |  | 0.487 | 0.583 | 0.091 | 0.661 |  |
 | Qwen3-VL-2B-Instruct |  | 0.592 | 0.613 | 0.029 | 0.356 |  |
@@ -122,7 +122,7 @@ Results on our held-out private test dataset:
 | Qwen3-VL-30B-A3B-Instruct |  | 0.790 | 0.644 | 0.053 | 0.661 |  |
 | Qwen3-VL-30B-A3B-Instruct-FP8 |  | 0.794 | 0.656 | 0.051 | 0.582 |  |
 | Qwen2.5-VL-7B |  | 0.750 | 0.676 | 0.184 | 0.438 |  |
-| Qwen3-VL-4B-Instruct |  | 0.679 | 0.691 | 0.060 | 0.532 |  |
+| Qwen3-VL-4B-Instruct | 0.506 | 0.679 | 0.682 | 0.059 | 0.520 | 0.591 |
 | gpt-5-nano |  | 0.519 | 0.606 | 0.090 | 0.598 |  |
 | gpt-4.1-nano |  | 0.686 | 0.640 | 0.025 | 0.555 |  |
 | Qwen3-VL-2B-Instruct |  | 0.533 | 0.627 | 0.022 | 0.357 |  |
