@@ -80,7 +80,7 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 | **Gemini-2.5-flash** |  | 0.796 | 0.683 | 0.067 | 0.841 |  |
 | **GPT-4.1-mini** | 0.659 | 0.863 | 0.735 | 0.093 | 0.750 | 0.853 |
 | **Claude-4.5-Sonnet** |  | 0.723 | 0.676 | 0.377 | 0.728 |  |
-| Cotype VL (32B 8 bit) |  | 0.797 | 0.756 | 0.262 | 0.694 |  |
+| Cotype VL (32B 8 bit) | 0.649 | 0.802 | 0.754 | 0.267 | 0.683 | 0.737 |
 | GPT-5-mini |  | 0.797 | 0.678 | 0.126 | 0.784 |  |
 | Qwen2.5-VL-72B |  | 0.848 | 0.712 | 0.220 | 0.644 |  |
 | GPT-5-mini (responses) |  | 0.743 | 0.567 | 0.118 | 0.811 |  |
@@ -114,7 +114,7 @@ Results on our held-out private test dataset:
 | **Gemini-2.5-flash** |  | 0.827 | 0.664 | 0.072 | 0.820 |  |
 | **Claude-4.5-Sonnet** |  | 0.727 | 0.652 | 0.369 | 0.745 |  |
 | **GPT-4.1-mini** | 0.653 | 0.869 | 0.713 | 0.095 | 0.735 | 0.851 |
-| Cotype VL (32B 8 bit) |  | 0.799 | 0.742 | 0.246 | 0.672 |  |
+| Cotype VL (32B 8 bit) | 0.637 | 0.803 | 0.746 | 0.251 | 0.687 | 0.701 |
 | Qwen2.5-VL-72B-Instruct |  | 0.840 | 0.699 | 0.203 | 0.631 |  |
 | GPT-5-mini |  | 0.797 | 0.675 | 0.104 | 0.745 |  |
 | Qwen3-VL-235B-A22B-Instruct | 0.612 | 0.816 | 0.648 | 0.053 | 0.739 | 0.802 |
