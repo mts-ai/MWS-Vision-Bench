@@ -73,6 +73,7 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 
 | Model | Overall | img→text | img→markdown | Grounding | KIE (JSON) | VQA |
 |-------|---------|----------|--------------|-----------|------------|-----|
+| **Gemini-3-flash-preview** | 0.681 | 0.836 | 0.724 | 0.051 | 0.845 | 0.950 |
 | **Claude-4.5-Opus** | 0.670 | 0.809 | 0.720 | 0.131 | 0.799 | 0.889 |
 | **GPT-5.2** | 0.663 | 0.799 | 0.656 | 0.173 | 0.855 | 0.835 |
 | **Gemini-2.5-pro** |  | 0.836 | 0.745 | 0.084 | 0.891 |  |
@@ -107,6 +108,7 @@ Results on our held-out private test dataset:
 
 | Model | Overall | img→text | img→markdown | Grounding | KIE (JSON) | VQA |
 |-------|---------|----------|--------------|-----------|------------|-----|
+| **Gemini-3-flash-preview** | 0.678 | 0.816 | 0.712 | 0.054 | 0.875 | 0.931 |
 | **Claude-4.5-Opus** | 0.676 | 0.812 | 0.698 | 0.145 | 0.812 | 0.915 |
 | **Gemini-2.5-pro** |  | 0.850 | 0.734 | 0.079 | 0.855 |  |
 | **Alice AI VLM dev** | 0.654 | 0.891 | 0.751 | 0.066 | 0.751 | 0.809 |
