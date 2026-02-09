@@ -84,7 +84,6 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 | Cotype VL (32B 8 bit) | 0.649 | 0.802 | 0.754 | 0.267 | 0.683 | 0.737 |
 | GPT-5-mini |  | 0.797 | 0.678 | 0.126 | 0.784 |  |
 | Qwen2.5-VL-72B |  | 0.848 | 0.712 | 0.220 | 0.644 |  |
-| GPT-5-mini (responses) |  | 0.743 | 0.567 | 0.118 | 0.811 |  |
 | Qwen3-VL-235B-A22B-Instruct | 0.623 | 0.812 | 0.668 | 0.050 | 0.755 | 0.830 |
 | GPT-5.1 | 0.588 | 0.716 | 0.680 | 0.092 | 0.670 | 0.783 |
 | Qwen3-VL-8B-Instruct | 0.584 | 0.780 | 0.700 | 0.084 | 0.592 | 0.766 |
@@ -124,8 +123,6 @@ Results on our held-out private test dataset:
 | Qwen3-VL-8B-Instruct | 0.578 | 0.779 | 0.692 | 0.073 | 0.592 | 0.754 |
 | Qwen3-VL-32B-Instruct |  | 0.757 | 0.642 | 0.047 | 0.668 |  |
 | GPT-4.1 | 0.574 | 0.698 | 0.676 | 0.081 | 0.664 | 0.753 |
-| GPT-5-mini (responses) |  | 0.749 | 0.588 | 0.114 | 0.741 |  |
-| GPT-5 (responses) |  | 0.748 | 0.646 | 0.079 | 0.691 |  |
 | Qwen2.5-VL-32B |  | 0.742 | 0.614 | 0.217 | 0.493 |  |
 | Qwen3-VL-30B-A3B-Instruct |  | 0.790 | 0.644 | 0.053 | 0.661 |  |
 | Qwen3-VL-30B-A3B-Instruct-FP8 |  | 0.794 | 0.656 | 0.051 | 0.582 |  |
