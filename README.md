@@ -18,6 +18,17 @@
 
 ---
 
+## Update — February 16, 2026
+
+### New: VQA category update
+
+We updated the **Reasoning VQA (ru)** category to improve evaluation robustness. Revised questions and answers only (images remain unchanged).
+Results are not directly comparable to versions prior to Feb 16, 2026 - for VQA and overall columns.
+
+This update improves reliability of reasoning-based evaluation while keeping the benchmark structure intact.
+
+---
+
 ## 🎯 Overview
 
 **MWSVisionBench** is a cutting-edge benchmark designed to evaluate multimodal large language models on challenging OCR and document understanding tasks in Russian. Unlike existing benchmarks, MWSVisionBench focuses on **real-world business scenarios** with authentic documents that companies actually encounter.
@@ -73,33 +84,24 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 
 | Model | Overall | img→text | img→markdown | Grounding | KIE (JSON) | VQA |
 |-------|---------|----------|--------------|-----------|------------|-----|
-| **Gemini-3-flash-preview** | 0.681 | 0.836 | 0.724 | 0.051 | 0.845 | 0.950 |
-| **Claude-4.5-Opus** | 0.670 | 0.809 | 0.720 | 0.131 | 0.799 | 0.889 |
-| **GPT-5.2** | 0.663 | 0.799 | 0.656 | 0.173 | 0.855 | 0.835 |
+| **Claude-4.6-Opus** | 0.704 | 0.841 | 0.748 | 0.168 | 0.852 | 0.908 |
 | **Gemini-2.5-pro** | 0.690 | 0.840 | 0.717 | 0.070 | 0.888 | 0.935 |
-| **Alice AI VLM dev** | 0.662 | 0.881 | 0.777 | 0.063 | 0.747 | 0.841 |
+| **Gemini-3-flash-preview** | 0.681 | 0.836 | 0.724 | 0.051 | 0.845 | 0.950 |
 | **Gemini-2.5-flash** | 0.672 | 0.886 | 0.729 | 0.042 | 0.825 | 0.879 |
-| **GPT-4.1-mini** | 0.659 | 0.863 | 0.735 | 0.093 | 0.750 | 0.853 |
+| **Claude-4.5-Opus** | 0.670 | 0.809 | 0.720 | 0.131 | 0.799 | 0.889 |
 | **Claude-4.5-Sonnet** | 0.669 | 0.741 | 0.660 | 0.459 | 0.727 | 0.759 |
+| **GPT-5.2** | 0.663 | 0.799 | 0.656 | 0.173 | 0.855 | 0.835 |
+| **Alice AI VLM dev** | 0.662 | 0.881 | 0.777 | 0.063 | 0.747 | 0.841 |
+| **GPT-4.1-mini** | 0.659 | 0.863 | 0.735 | 0.093 | 0.750 | 0.853 |
 | Cotype VL (32B 8 bit) | 0.649 | 0.802 | 0.754 | 0.267 | 0.683 | 0.737 |
-| GPT-5-mini |  | 0.797 | 0.678 | 0.126 | 0.784 |  |
-| Qwen2.5-VL-72B-Instruct | 0.621 | 0.847 | 0.706 | 0.173 | 0.615 | 0.765 |
+| GPT-5-mini | 0.639 | 0.782 | 0.678 | 0.117 | 0.774 | 0.843 |
 | Qwen3-VL-235B-A22B-Instruct | 0.623 | 0.812 | 0.668 | 0.050 | 0.755 | 0.830 |
+| Qwen2.5-VL-72B-Instruct | 0.621 | 0.847 | 0.706 | 0.173 | 0.615 | 0.765 |
 | GPT-5.1 | 0.588 | 0.716 | 0.680 | 0.092 | 0.670 | 0.783 |
 | Qwen3-VL-8B-Instruct | 0.584 | 0.780 | 0.700 | 0.084 | 0.592 | 0.766 |
-| Qwen3-VL-30B-A3B |  | 0.802 | 0.688 | 0.053 | 0.661 |  |
+| Qwen3-VL-32B-Instruct | 0.582 | 0.730 | 0.631 | 0.056 | 0.708 | 0.784 |
 | GPT-4.1 | 0.574 | 0.692 | 0.681 | 0.093 | 0.624 | 0.779 |
-| Qwen3-VL-30B-A3B-FP8 |  | 0.798 | 0.683 | 0.056 | 0.638 |  |
-| Qwen3-VL-32B-Instruct |  | 0.732 | 0.646 | 0.054 | 0.724 |  |
-| Qwen2.5-VL-32B |  | 0.767 | 0.649 | 0.232 | 0.493 |  |
-| GPT-5 (responses) |  | 0.746 | 0.650 | 0.080 | 0.687 |  |
-| Qwen2.5-VL-7B |  | 0.779 | 0.704 | 0.185 | 0.426 |  |
 | Qwen3-VL-4B-Instruct | 0.515 | 0.699 | 0.702 | 0.061 | 0.506 | 0.607 |
-| GPT-4.1-nano |  | 0.676 | 0.672 | 0.028 | 0.567 |  |
-| GPT-5-nano |  | 0.487 | 0.583 | 0.091 | 0.661 |  |
-| Qwen3-VL-2B-Instruct |  | 0.592 | 0.613 | 0.029 | 0.356 |  |
-| Qwen2.5-VL-3B |  | 0.613 | 0.654 | 0.045 | 0.203 |  |
-| Pixtral-12B-2409 |  | 0.327 | 0.555 | 0.026 | 0.325 |  |
 
 ### 🔒 Test Set (Private)
 
@@ -107,32 +109,24 @@ Results on our held-out private test dataset:
 
 | Model | Overall | img→text | img→markdown | Grounding | KIE (JSON) | VQA |
 |-------|---------|----------|--------------|-----------|------------|-----|
+| **Claude-4.6-Opus** | 0.699 | 0.833 | 0.715 | 0.175 | 0.832 | 0.940 |
 | **Gemini-3-flash-preview** | 0.678 | 0.816 | 0.712 | 0.054 | 0.875 | 0.931 |
 | **Claude-4.5-Opus** | 0.676 | 0.812 | 0.698 | 0.145 | 0.812 | 0.915 |
+| **Claude-4.5-Sonnet** | 0.674 | 0.754 | 0.660 | 0.440 | 0.750 | 0.766 |
 | **Gemini-2.5-pro** | 0.674 | 0.818 | 0.719 | 0.068 | 0.836 | 0.929 |
 | **Alice AI VLM dev** | 0.654 | 0.891 | 0.751 | 0.066 | 0.751 | 0.809 |
-| **GPT-5.2** | 0.647 | 0.806 | 0.643 | 0.156 | 0.794 | 0.835 |
 | **Gemini-2.5-flash** | 0.654 | 0.869 | 0.675 | 0.047 | 0.814 | 0.866 |
-| **Claude-4.5-Sonnet** | 0.674 | 0.754 | 0.660 | 0.440 | 0.750 | 0.766 |
 | **GPT-4.1-mini** | 0.653 | 0.869 | 0.713 | 0.095 | 0.735 | 0.851 |
+| **GPT-5.2** | 0.647 | 0.806 | 0.643 | 0.156 | 0.794 | 0.835 |
 | Cotype VL (32B 8 bit) | 0.637 | 0.803 | 0.746 | 0.251 | 0.687 | 0.701 |
 | Qwen2.5-VL-72B-Instruct | 0.630 | 0.844 | 0.701 | 0.193 | 0.645 | 0.770 |
-| GPT-5-mini |  | 0.797 | 0.675 | 0.104 | 0.745 |  |
+| GPT-5-mini | 0.625 | 0.772 | 0.654 | 0.105 | 0.717 | 0.875 |
 | Qwen3-VL-235B-A22B-Instruct | 0.612 | 0.816 | 0.648 | 0.053 | 0.739 | 0.802 |
 | GPT-5.1 | 0.582 | 0.713 | 0.688 | 0.087 | 0.650 | 0.770 |
 | Qwen3-VL-8B-Instruct | 0.578 | 0.779 | 0.692 | 0.073 | 0.592 | 0.754 |
-| Qwen3-VL-32B-Instruct |  | 0.757 | 0.642 | 0.047 | 0.668 |  |
+| Qwen3-VL-32B-Instruct | 0.576 | 0.740 | 0.630 | 0.050 | 0.671 | 0.786 |
 | GPT-4.1 | 0.574 | 0.698 | 0.676 | 0.081 | 0.664 | 0.753 |
-| Qwen2.5-VL-32B |  | 0.742 | 0.614 | 0.217 | 0.493 |  |
-| Qwen3-VL-30B-A3B-Instruct |  | 0.790 | 0.644 | 0.053 | 0.661 |  |
-| Qwen3-VL-30B-A3B-Instruct-FP8 |  | 0.794 | 0.656 | 0.051 | 0.582 |  |
-| Qwen2.5-VL-7B |  | 0.750 | 0.676 | 0.184 | 0.438 |  |
 | Qwen3-VL-4B-Instruct | 0.506 | 0.679 | 0.682 | 0.059 | 0.520 | 0.591 |
-| GPT-5-nano |  | 0.519 | 0.606 | 0.090 | 0.598 |  |
-| GPT-4.1-nano |  | 0.686 | 0.640 | 0.025 | 0.555 |  |
-| Qwen3-VL-2B-Instruct |  | 0.533 | 0.627 | 0.022 | 0.357 |  |
-| Qwen2.5-VL-3B |  | 0.631 | 0.688 | 0.026 | 0.232 |  |
-| Pixtral-12B-2409 |  | 0.302 | 0.539 | 0.032 | 0.364 |  |
 
 *Scale: 0.0 - 1.0 (higher is better)*
 
