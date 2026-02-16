@@ -38,6 +38,8 @@ parser.add_argument('--data_path', nargs='+', default=None,
                     help='Local JSON files to process (if not set, downloads from HuggingFace)')
 parser.add_argument('--hf_token', default=None,
                     help='HuggingFace token for private test dataset (or set HF_TOKEN env var)')
+parser.add_argument('--hf_revision', default=None,
+                    help='HuggingFace dataset revision (branch name or commit hash)')
 parser.add_argument('--cache_dir', default=None,
                     help='Cache directory for HuggingFace datasets')
 parser.add_argument('--sample', type=int, default=None,
@@ -104,6 +106,7 @@ try:
         data_paths=args.data_path,
         base_path=args.base_path,
         hf_token=args.hf_token or os.environ.get('HF_TOKEN'),
+        hf_revision=args.hf_revision,
         cache_dir=args.cache_dir,
         sample=args.sample,
         silent=False
