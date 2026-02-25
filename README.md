@@ -101,6 +101,7 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 | Qwen3-VL-8B-Instruct | 0.584 | 0.780 | 0.700 | 0.084 | 0.592 | 0.766 |
 | Qwen3-VL-32B-Instruct | 0.582 | 0.730 | 0.631 | 0.056 | 0.708 | 0.784 |
 | GPT-4.1 | 0.574 | 0.692 | 0.681 | 0.093 | 0.624 | 0.779 |
+| Mistral Large 3 2512 | 0.565 | 0.777 | 0.713 | 0.065 | 0.560 | 0.709 |
 | Mistral Small 3.2 24B Instruct | 0.561 | 0.734 | 0.695 | 0.060 | 0.599 | 0.715 |
 | Qwen3-VL-4B-Instruct | 0.515 | 0.699 | 0.702 | 0.061 | 0.506 | 0.607 |
 
@@ -128,6 +129,7 @@ Results on our held-out private test dataset:
 | Mistral Small 3.2 24B Instruct | 0.577 | 0.748 | 0.701 | 0.067 | 0.664 | 0.703 |
 | Qwen3-VL-32B-Instruct | 0.576 | 0.740 | 0.630 | 0.050 | 0.671 | 0.786 |
 | GPT-4.1 | 0.574 | 0.698 | 0.676 | 0.081 | 0.664 | 0.753 |
+| Mistral Large 3 2512 | 0.551 | 0.753 | 0.691 | 0.063 | 0.542 | 0.704 |
 | Qwen3-VL-4B-Instruct | 0.506 | 0.679 | 0.682 | 0.059 | 0.520 | 0.591 |
 
 *Scale: 0.0 - 1.0 (higher is better)*
