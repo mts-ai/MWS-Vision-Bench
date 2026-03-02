@@ -106,6 +106,7 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 | Mistral Large 3 2512 | 0.565 | 0.777 | 0.713 | 0.065 | 0.560 | 0.709 |
 | Mistral Small 3.2 24B Instruct | 0.561 | 0.734 | 0.695 | 0.060 | 0.599 | 0.715 |
 | Qwen3-VL-4B-Instruct | 0.515 | 0.699 | 0.702 | 0.061 | 0.506 | 0.607 |
+| Qwen3.5-2B | 0.489 | 0.743 | 0.621 | 0.041 | 0.466 | 0.574 |
 
 ### 🔒 Test Set (Private)
 
@@ -135,6 +136,7 @@ Results on our held-out private test dataset:
 | GPT-4.1 | 0.574 | 0.698 | 0.676 | 0.081 | 0.664 | 0.753 |
 | Mistral Large 3 2512 | 0.551 | 0.753 | 0.691 | 0.063 | 0.542 | 0.704 |
 | Qwen3-VL-4B-Instruct | 0.506 | 0.679 | 0.682 | 0.059 | 0.520 | 0.591 |
+| Qwen3.5-2B | 0.473 | 0.708 | 0.622 | 0.038 | 0.461 | 0.538 |
 
 *Scale: 0.0 - 1.0 (higher is better)*
 
