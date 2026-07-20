@@ -84,9 +84,9 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 
 | Model | Overall | img→text | img→markdown | Grounding | KIE (JSON) | VQA |
 |-------|---------|----------|--------------|-----------|------------|-----|
-| Claude Fable 5† | 0.799 | 0.828 | 0.737 | 0.635 | 0.843 | 0.950 |
+| Claude Fable 5 | 0.799 | 0.828 | 0.737 | 0.635 | 0.843 | 0.950 |
 | GPT-5.6 Sol | 0.790 | 0.818 | 0.716 | 0.621 | 0.867 | 0.926 |
-| Kimi K3‡ | 0.777 | 0.783 | 0.716 | 0.588 | 0.856 | 0.941 |
+| Kimi K3 | 0.777 | 0.783 | 0.716 | 0.588 | 0.856 | 0.941 |
 | GPT-5.6 Terra | 0.749 | 0.808 | 0.693 | 0.571 | 0.799 | 0.874 |
 | Kimi K2.6 | 0.743 | 0.868 | 0.761 | 0.301 | 0.858 | 0.929 |
 | Cotype Pro 3 | 0.736 | 0.861 | 0.747 | 0.384 | 0.832 | 0.858 |
@@ -129,10 +129,6 @@ Top models evaluated on the publicly available [validation dataset](https://hugg
 | Qwen3-VL-4B-Instruct | 0.515 | 0.699 | 0.702 | 0.061 | 0.506 | 0.607 |
 | Qwen3.5-2B | 0.489 | 0.743 | 0.621 | 0.041 | 0.466 | 0.574 |
 | Qwen3.5-0.8B | 0.319 | 0.549 | 0.499 | 0.027 | 0.157 | 0.362 |
-
-† 10 of 1302 responses failed after the configured retries and received a score of 0.
-
-‡ 16 of 1302 responses failed after the configured retries and received a score of 0.
 
 ### 🔒 Test Set (Private)
 
