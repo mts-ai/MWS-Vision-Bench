@@ -36,7 +36,7 @@ from tqdm import tqdm
 # compatible with ``python src/evaluation/eval_parallel.py``.
 try:
     from .metrics.iou_metric import calculate_iou, extract_coordinates
-    from .metrics.page_ocr_metric import cal_per_metrics
+    from .metrics.page_ocr_metric import cal_per_metrics, ensure_wordnet
     from .metrics.teds_metric import (
         compute_f1_score,
         convert_str_to_dict,
@@ -46,7 +46,7 @@ try:
     from .metrics.vqa_metric import vqa_evaluation
 except ImportError:
     from metrics.iou_metric import calculate_iou, extract_coordinates
-    from metrics.page_ocr_metric import cal_per_metrics
+    from metrics.page_ocr_metric import cal_per_metrics, ensure_wordnet
     from metrics.teds_metric import (
         compute_f1_score,
         convert_str_to_dict,
@@ -389,6 +389,12 @@ def main() -> None:
         original_count = len(data_list)
         data_list = [item for item in data_list if item["type"] in supported_types]
         print(f"Filtered to {len(data_list)} items (removed {original_count - len(data_list)} unsupported)")
+
+    # Prepare the pinned WordNet corpus once in the parent process. OCR workers
+    # then reuse the same verified archive instead of racing to download it.
+    if "full-page OCR ru" in task_types:
+        print("Preparing NLTK WordNet corpus for the OCR/METEOR metric...")
+        ensure_wordnet()
     
     # Evaluate
     results = evaluate_parallel(data_list, args.num_processes)
