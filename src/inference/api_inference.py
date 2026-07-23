@@ -12,6 +12,7 @@ Licensed under MIT License
 import base64
 import json
 import logging
+import mimetypes
 import os
 import sys
 import time
@@ -37,6 +38,9 @@ class OpenAIInference(InferenceBase):
         self.api_key = None
         self.headers = None
         self.streaming_supported = None  # Will be determined on first request
+        self.response_timeout_seconds = float(
+            os.getenv("RESPONSE_TIMEOUT_SECONDS", "1200")
+        )
     
     def get_default_model(self) -> str:
         return "gpt-4o-mini"
@@ -55,7 +59,11 @@ class OpenAIInference(InferenceBase):
         else:
             self.api_key = os.getenv("OPENAI_API_KEY")
         
-        print("Loaded OPENAI_API_KEY =", self.api_key)
+        if not self.api_key:
+            raise ValueError(
+                "No API key provided. Pass --api_key or set OPENAI_API_KEY."
+            )
+        print("Loaded API credentials")
         
         # Set up headers
         self.headers = {
@@ -69,16 +77,23 @@ class OpenAIInference(InferenceBase):
             self.args.api_url,
             headers=self.headers,
             json=payload,
-            timeout=(10, 1200),  # (connect, read) - 10s connect, 20 min read
+            timeout=(10, self.response_timeout_seconds),
             stream=use_streaming  # Enable streaming response in requests
         )
 
-    def extract_answer(self, resp, use_streaming=False):
+    def extract_answer(self, resp, use_streaming=False, deadline=None):
         """Extract answer from OpenAI API response"""
         if use_streaming:
             # Process Server-Sent Events (SSE) stream
             answer = ""
             for line in resp.iter_lines():
+                # SSE heartbeats reset requests' read timeout. Enforce a total
+                # response deadline as well so a live but non-progressing stream
+                # cannot hold a benchmark worker forever.
+                if deadline is not None and time.monotonic() >= deadline:
+                    raise requests.exceptions.Timeout(
+                        "Streaming response exceeded the total response timeout"
+                    )
                 if line:
                     line_str = line.decode('utf-8')
                     # SSE format: "data: <json>"
@@ -137,11 +152,19 @@ class OpenAIInference(InferenceBase):
             messages.append({"role": "system", "content": system_prompt})
         
         # Add user message
+        image_mime, _ = mimetypes.guess_type(image_path)
+        if not image_mime or not image_mime.startswith("image/"):
+            image_mime = "image/png"
         messages.append({
             "role": "user", 
             "content": [
                 {"type": "text", "text": question},
-                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_b64}"}}
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{image_mime};base64,{img_b64}"
+                    },
+                },
             ]
         })
         
@@ -181,12 +204,16 @@ class OpenAIInference(InferenceBase):
         max_retries = 2
         for attempt in range(max_retries):
             try:
+                deadline = time.monotonic() + self.response_timeout_seconds
                 # Set streaming mode in payload
                 current_payload = payload.copy()
                 if use_streaming:
                     current_payload["stream"] = True
                 
-                resp = self.get_response(current_payload)
+                resp = self.get_response(
+                    current_payload,
+                    use_streaming=use_streaming,
+                )
                 if resp.status_code == 200:
                     if use_streaming:
                         # Mark streaming as supported (first successful use)
@@ -194,7 +221,11 @@ class OpenAIInference(InferenceBase):
                             self.streaming_supported = True
                             logging.info("✓ Streaming mode enabled and working")
                         
-                        answer = self.extract_answer(resp, use_streaming=True)
+                        answer = self.extract_answer(
+                            resp,
+                            use_streaming=True,
+                            deadline=deadline,
+                        )
                         if answer:
                             item_result = item.copy()
                             item_result["predict"] = answer.strip()

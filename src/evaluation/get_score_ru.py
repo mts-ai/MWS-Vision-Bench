@@ -1,7 +1,7 @@
 """
 MWSVisionBench - Russian OCR benchmark for multimodal LLMs
 
-This file: Simplified metrics calculation for 5 task types only
+This file: Metrics calculation for document understanding and antifraud
 
 Copyright (c) 2024 MWS AI
 Licensed under MIT License
@@ -13,8 +13,60 @@ import json
 from typing import Any, Dict, List, Tuple
 
 
+def _compute_antifraud_details(
+    items: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Calculate AF v0.1 and its auditable intermediate values."""
+    labels = ("ai_gen", "edited", "original")
+    correct = {label: 0 for label in labels}
+    total = {label: 0 for label in labels}
+    edited_reason_scores: List[float] = []
+
+    for item in items:
+        label = item.get("dataset_name", "")
+        if label not in labels:
+            continue
+        total[label] += 1
+        if item.get("correct"):
+            correct[label] += 1
+        if label == "edited":
+            reason_score = float(item.get("reason_score") or 0.0)
+            edited_reason_scores.append(min(1.0, max(0.0, reason_score)))
+
+    recalls = {
+        label: correct[label] / total[label] if total[label] else 0.0
+        for label in labels
+    }
+    # AF is defined for exactly three classes. Missing classes contribute zero
+    # recall instead of inflating a sampled run by changing the denominator.
+    balanced_accuracy = sum(recalls.values()) / len(labels)
+    edited_reason_score = (
+        sum(edited_reason_scores) / len(edited_reason_scores)
+        if edited_reason_scores
+        else 0.0
+    )
+    score = (
+        0.75 * max(0.0, balanced_accuracy - 1 / 3)
+        + 0.5 * edited_reason_score
+    )
+    return {
+        "score": min(1.0, max(0.0, score)),
+        "balanced_accuracy": balanced_accuracy,
+        "edited_reason_score": edited_reason_score,
+        "recall_by_class": recalls,
+        "correct_by_class": correct,
+        "count_by_class": total,
+        "count": sum(total.values()),
+    }
+
+
+def _compute_antifraud_score(items: List[Dict[str, Any]]) -> float:
+    """Calculate the combined antifraud classification and explanation score."""
+    return float(_compute_antifraud_details(items)["score"])
+
+
 def get_metrics(json_path: str) -> Tuple[Dict[str, float], Dict[str, Any]]:
-    """Calculate metrics for our 5 task types.
+    """Calculate metrics for all supported task types.
     
     Args:
         json_path: Path to the evaluation JSON file
@@ -34,6 +86,7 @@ def get_metrics(json_path: str) -> Tuple[Dict[str, float], Dict[str, Any]]:
     full_page_ocr_scores = []
     document_parsing_scores = []
     key_extraction_scores = []
+    antifraud_items = []
     
     # Collect scores by task type (handle both ru and en versions)
     for item in data_list:
@@ -50,6 +103,8 @@ def get_metrics(json_path: str) -> Tuple[Dict[str, float], Dict[str, Any]]:
             document_parsing_scores.append(score)
         elif task_type in ["key information extraction ru", "key information extraction en"]:
             key_extraction_scores.append(score)
+        elif task_type == "antifraud ru":
+            antifraud_items.append(item)
         else:
             # Skip unknown types silently or just ignore them
             pass
@@ -65,14 +120,33 @@ def get_metrics(json_path: str) -> Tuple[Dict[str, float], Dict[str, Any]]:
     full_page_ocr_avg = safe_average(full_page_ocr_scores)
     document_parsing_avg = safe_average(document_parsing_scores)
     key_extraction_avg = safe_average(key_extraction_scores)
+    antifraud_avg = (
+        _compute_antifraud_score(antifraud_items)
+        if antifraud_items
+        else 0.0
+    )
     
-    metrics = {
-        "image 2 text (text_recognition)": full_page_ocr_avg,
-        "text_grounding_basic": text_grounding_avg,
-        "keymap (relationship_extraction)": key_extraction_avg,
-        "image 2 markdown (element_parsing)": document_parsing_avg,
-        "vqa (knowledge_reasoning)": reasoning_vqa_avg
-    }
+    vision_count = (
+        len(text_grounding_scores)
+        + len(reasoning_vqa_scores)
+        + len(full_page_ocr_scores)
+        + len(document_parsing_scores)
+        + len(key_extraction_scores)
+    )
+
+    metrics: Dict[str, float] = {}
+    if vision_count:
+        metrics.update(
+            {
+                "image 2 text (text_recognition)": full_page_ocr_avg,
+                "text_grounding_basic": text_grounding_avg,
+                "keymap (relationship_extraction)": key_extraction_avg,
+                "image 2 markdown (element_parsing)": document_parsing_avg,
+                "vqa (knowledge_reasoning)": reasoning_vqa_avg,
+            }
+        )
+    if antifraud_items:
+        metrics["antifraud (document_verification)"] = antifraud_avg
     
     # Calculate overall average as mean of metric averages (like old code)
     metric_averages = []
@@ -86,22 +160,32 @@ def get_metrics(json_path: str) -> Tuple[Dict[str, float], Dict[str, Any]]:
         metric_averages.append(document_parsing_avg)
     if key_extraction_scores:
         metric_averages.append(key_extraction_avg)
-    
     overall_avg = safe_average(metric_averages)
     
     # Detailed breakdown - use simple structure
-    total_count = (len(text_grounding_scores) + len(reasoning_vqa_scores) + 
-                   len(full_page_ocr_scores) + len(document_parsing_scores) + 
-                   len(key_extraction_scores))
-    
     detailed = {
         "overall": {
-            "count": total_count,
-            "average": overall_avg
-        }
+            "count": vision_count,
+            "average": overall_avg,
+            "includes_antifraud": False
+        },
+        "total_count": vision_count + len(antifraud_items),
     }
+    if antifraud_items:
+        detailed["antifraud"] = _compute_antifraud_details(antifraud_items)
     
     return metrics, detailed
+
+
+def get_summary_score(
+    metrics: Dict[str, float],
+    detailed: Dict[str, Any],
+    dataset_family: str,
+) -> float:
+    """Return the score displayed in the benchmark summary table."""
+    if dataset_family == "antifraud":
+        return metrics.get("antifraud (document_verification)", 0.0)
+    return float(detailed["overall"]["average"])
 
 
 def main() -> None:
@@ -111,7 +195,6 @@ def main() -> None:
     )
     parser.add_argument("--input_path", required=True, help="Path to evaluation JSON file")
     parser.add_argument("--output_path", help="Path to save detailed metrics (optional)")
-    
     args = parser.parse_args()
     
     # Calculate metrics
@@ -122,8 +205,14 @@ def main() -> None:
     for metric_name, score in metrics.items():
         print(f"{metric_name}: {score:.3f}")
     
-    print(f"\nOverall Scores:")
-    print(f"Russian Overall Score: {detailed['overall']['average']:.3f}")
+    if detailed["overall"]["count"]:
+        print("\nOverall Scores:")
+        print(f"Russian Overall Score: {detailed['overall']['average']:.3f}")
+    if "antifraud (document_verification)" in metrics:
+        print(
+            "\nAnti-fraud Score: "
+            f"{metrics['antifraud (document_verification)']:.3f}"
+        )
     print("End of Code!")
     
     # Save detailed metrics if requested

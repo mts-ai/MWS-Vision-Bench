@@ -13,9 +13,13 @@ ipdb>=0.13.13
 openai>=1.97.0
 requests>=2.32.4
 gigachat>=0.1.40
-transformers>=4.53.1
-datasets>=2.14.0
-huggingface_hub>=0.20.0
+transformers>=4.53.1,<5
+datasets>=2.14.0,<4
+# datasets 2.x imports PyExtensionType, which was removed in pyarrow 21.
+pyarrow>=8.0.0,<21
+# datasets 2.14.x cannot reopen a LocalFileSystem cache with newer fsspec.
+fsspec[http]>=2021.11.1,<2023.10
+huggingface_hub>=0.20.0,<1
 accelerate>=1.8.1
 qwen-vl-utils[decord]>=0.0.5
 pillow>=9.4.0

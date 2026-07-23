@@ -58,8 +58,7 @@ class ResponsesInference(InferenceBase):
         
         if not self.api_key:
             raise ValueError("OPENAI_API_KEY not provided. Set it via --api_key or environment variable.")
-        
-        print("Loaded OPENAI_API_KEY =", self.api_key[:10] + "..." if self.api_key else "None")
+        print("Loaded API credentials")
         
         # Initialize client with official endpoint
         self.client = OpenAI(api_key=self.api_key, base_url="https://api.openai.com/v1")

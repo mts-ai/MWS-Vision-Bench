@@ -10,11 +10,20 @@ import jieba
 import re
 from nltk.translate import meteor_score
 
-# Ensure NLTK wordnet is available (download silently if missing)
-try:
-    nltk.data.find('corpora/wordnet')
-except LookupError:
-    nltk.download('wordnet', quiet=True)
+
+def _ensure_wordnet():
+    """Fetch WordNet only when the OCR/METEOR metric is actually used."""
+    try:
+        nltk.data.find("corpora/wordnet")
+        return
+    except LookupError:
+        pass
+
+    if not nltk.download("wordnet", quiet=True):
+        raise RuntimeError(
+            "The OCR METEOR metric requires the NLTK WordNet corpus. "
+            "Install it with: python -m nltk.downloader wordnet"
+        )
 
 
 def contain_chinese_string(text):
@@ -22,6 +31,7 @@ def contain_chinese_string(text):
     return bool(chinese_pattern.search(text))
 
 def cal_per_metrics(pred, gt):
+    _ensure_wordnet()
     metrics = {}
 
     if contain_chinese_string(gt) or contain_chinese_string(pred):
