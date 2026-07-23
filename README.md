@@ -235,6 +235,20 @@ python run_benchmark.py \
     --model_name "gpt-4o-mini" \
     --api_key "your-openai-key" \
     --max_workers 30  # Recommended for high-tier OpenAI accounts
+
+# Experimental anti-fraud validation set
+python run_benchmark.py \
+    --model_name "gpt-4o-mini" \
+    --api_key "your-openai-key" \
+    --dataset_family antifraud
+
+# Optional experimental Overall that includes anti-fraud.
+# By default anti-fraud is reported separately.
+python run_benchmark.py \
+    --model_name "gpt-4o-mini" \
+    --api_key "your-openai-key" \
+    --dataset_family antifraud \
+    --include_antifraud_in_overall
 ```
 
 **⚡ Performance Tips:**
@@ -249,6 +263,42 @@ Results are automatically saved to:
 - `results/{test_name}/{model_name}_validation_eval.json` - validation metrics
 - `results/{test_name}/{model_name}_test_eval.json` - test metrics (if accessible)
 - `logs/{test_name}.log` - execution logs
+
+### Experimental anti-fraud category
+
+The anti-fraud dataset contains three labels:
+
+- `original` — an image treated as an unmodified source in this experiment;
+- `edited` — a document manually modified in a graphics editor;
+- `ai_gen` — a document image created by a generative model.
+
+The model returns a JSON object:
+
+```json
+{"label": "original|edited|ai_gen", "arguments": "short explanation"}
+```
+
+The metric combines balanced three-class accuracy with the quality of the
+explanation for manually edited documents:
+
+```text
+AF = 0.75 × max(0, balanced_accuracy − 1/3)
+     + 0.5 × edited_reason_score
+```
+
+Unlike the five original metrics, AF is aggregated over a complete split:
+balanced accuracy requires the full three-class confusion matrix. It is not a
+plain mean of independent per-item scores.
+
+Anti-fraud is an experimental `AF v0.1` category. It is displayed separately
+and is excluded from the main Overall score by default, preserving
+comparability with earlier benchmark results. Related source and edited images
+can occur in different splits, and image dimensions correlate with labels.
+These limitations are disclosed for reproducibility; a future dataset version
+will group related images and normalize technical cues.
+
+This category measures general-purpose multimodal language models and is not a
+replacement for a dedicated production fraud-detection system.
 
 
 ---
