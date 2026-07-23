@@ -48,7 +48,10 @@ def _compute_antifraud_score(items: List[Dict[str, Any]]) -> float:
     )
 
 
-def get_metrics(json_path: str) -> Tuple[Dict[str, float], Dict[str, Any]]:
+def get_metrics(
+    json_path: str,
+    include_antifraud_in_overall: bool = False,
+) -> Tuple[Dict[str, float], Dict[str, Any]]:
     """Calculate metrics for all supported task types.
     
     Args:
@@ -131,6 +134,9 @@ def get_metrics(json_path: str) -> Tuple[Dict[str, float], Dict[str, Any]]:
         metric_averages.append(document_parsing_avg)
     if key_extraction_scores:
         metric_averages.append(key_extraction_avg)
+    if antifraud_items and include_antifraud_in_overall:
+        metric_averages.append(antifraud_avg)
+    
     overall_avg = safe_average(metric_averages)
     
     # Detailed breakdown - use simple structure
@@ -142,22 +148,11 @@ def get_metrics(json_path: str) -> Tuple[Dict[str, float], Dict[str, Any]]:
         "overall": {
             "count": total_count,
             "average": overall_avg,
-            "includes_antifraud": False
+            "includes_antifraud": include_antifraud_in_overall and bool(antifraud_items)
         }
     }
     
     return metrics, detailed
-
-
-def get_summary_score(
-    metrics: Dict[str, float],
-    detailed: Dict[str, Any],
-    dataset_family: str,
-) -> float:
-    """Return the score displayed in the benchmark summary table."""
-    if dataset_family == "antifraud":
-        return metrics.get("antifraud (document_verification)", 0.0)
-    return float(detailed["overall"]["average"])
 
 
 def main() -> None:
@@ -167,10 +162,19 @@ def main() -> None:
     )
     parser.add_argument("--input_path", required=True, help="Path to evaluation JSON file")
     parser.add_argument("--output_path", help="Path to save detailed metrics (optional)")
+    parser.add_argument(
+        "--include_antifraud_in_overall",
+        action="store_true",
+        help="Include antifraud in Overall (excluded by default)",
+    )
+    
     args = parser.parse_args()
     
     # Calculate metrics
-    metrics, detailed = get_metrics(args.input_path)
+    metrics, detailed = get_metrics(
+        args.input_path,
+        include_antifraud_in_overall=args.include_antifraud_in_overall,
+    )
     
     # Print results in old format
     print("Russian Scores:")
