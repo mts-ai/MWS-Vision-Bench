@@ -23,8 +23,7 @@ def load_benchmark_datasets(
     hf_revision: Optional[str] = None,
     cache_dir: Optional[str] = None,
     sample: Optional[int] = None,
-    silent: bool = True,
-    dataset_family: str = "vision"
+    silent: bool = True
 ) -> Tuple[List[List[Dict[str, Any]]], List[str]]:
     """
     Load benchmark datasets with smart fallback logic.
@@ -43,7 +42,6 @@ def load_benchmark_datasets(
         cache_dir: Cache directory for HF datasets (default: ~/.cache/huggingface)
         sample: Number of samples to load (for quick testing)
         silent: If True, no warnings for missing test access
-        dataset_family: ``vision`` or ``antifraud`` HuggingFace repositories
         
     Returns:
         Tuple of (datasets, split_names):
@@ -72,14 +70,7 @@ def load_benchmark_datasets(
         return _load_local_datasets(data_paths, base_path, sample)
     
     # HuggingFace mode (default)
-    return _load_hf_datasets(
-        hf_token,
-        hf_revision,
-        cache_dir,
-        sample,
-        silent,
-        dataset_family=dataset_family,
-    )
+    return _load_hf_datasets(hf_token, hf_revision, cache_dir, sample, silent)
 
 
 def _load_local_datasets(
@@ -132,8 +123,7 @@ def _load_hf_datasets(
     hf_revision: Optional[str],
     cache_dir: Optional[str],
     sample: Optional[int],
-    silent: bool,
-    dataset_family: str = "vision"
+    silent: bool
 ) -> Tuple[List[List[Dict[str, Any]]], List[str]]:
     """Load datasets from HuggingFace with graceful fallback.
     
@@ -143,7 +133,6 @@ def _load_hf_datasets(
         cache_dir: Cache directory
         sample: Number of samples to load
         silent: Suppress warnings
-        dataset_family: ``vision`` or ``antifraud`` HuggingFace repositories
         
     Returns:
         Tuple of (datasets, split_names)
@@ -158,23 +147,6 @@ def _load_hf_datasets(
             "   Install it with: pip install datasets"
         )
     
-    repositories = {
-        "vision": (
-            "MTSAIR/MWS-Vision-Bench",
-            "MTSAIR/MWS-Vision-Bench-Test",
-        ),
-        "antifraud": (
-            "MTSAIR/MWS-Antifraud-Bench",
-            "MTSAIR/MWS-Antifraud-Bench-Test",
-        ),
-    }
-    if dataset_family not in repositories:
-        raise ValueError(
-            f"Unsupported dataset_family={dataset_family!r}; "
-            f"expected one of {sorted(repositories)}"
-        )
-    validation_repo, test_repo = repositories[dataset_family]
-
     datasets = []
     split_names = []
     
@@ -188,7 +160,7 @@ def _load_hf_datasets(
     
     try:
         val_dataset = load_dataset(
-            validation_repo,
+            "MTSAIR/MWS-Vision-Bench",
             split=split_str,
             revision=hf_revision,
             cache_dir=cache_dir,
@@ -203,7 +175,7 @@ def _load_hf_datasets(
             f"❌ Failed to load validation dataset from HuggingFace.\n"
             f"   Error: {e}\n"
             f"   Please check your internet connection.\n"
-            f"   Dataset: https://huggingface.co/datasets/{validation_repo}"
+            f"   Dataset: https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench"
         )
     
     # 2. Try to load test set (private - graceful fallback)
@@ -211,7 +183,7 @@ def _load_hf_datasets(
         print("📥 Attempting to download test dataset (private)...")
         try:
             test_dataset = load_dataset(
-                test_repo,
+                "MTSAIR/MWS-Vision-Bench-Test",
                 split=split_str,
                 revision=hf_revision,
                 cache_dir=cache_dir,
@@ -377,3 +349,4 @@ def get_dataset_info(
         info["message"] = "Public access: validation only (set HF_TOKEN for test set)"
     
     return info
+

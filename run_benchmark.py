@@ -56,10 +56,6 @@ parser.add_argument('--use_base_prompt', action='store_true',
                     help='Whether to use base prompt for inference')
 parser.add_argument('--max_workers', type=int, default=None,
                     help='Number of parallel workers for inference (if not set, uses model-specific default)')
-parser.add_argument('--dataset_family', choices=('vision', 'antifraud'), default='vision',
-                    help='HuggingFace benchmark family to load (default: vision)')
-parser.add_argument('--include_antifraud_in_overall', action='store_true',
-                    help='Include antifraud in Overall (excluded by default for leaderboard compatibility)')
 args = parser.parse_args()
 
 # Configuration constants
@@ -113,8 +109,7 @@ try:
         hf_revision=args.hf_revision,
         cache_dir=args.cache_dir,
         sample=args.sample,
-        silent=False,
-        dataset_family=args.dataset_family
+        silent=False
     )
     logging.info(f"Loaded {len(datasets)} dataset(s): {split_names}")
 except Exception as e:
@@ -212,10 +207,7 @@ logging.info("Calculating metrics for each part...")
 metrics_list: List[Dict[str, Any]] = []
 for i, eval_path in enumerate(eval_paths):
     logging.info(f"Calculating metrics for part {i+1}: {eval_path}")
-    metrics, _ = get_metrics(
-        eval_path,
-        include_antifraud_in_overall=args.include_antifraud_in_overall,
-    )
+    metrics, _ = get_metrics(eval_path)
     metrics_list.append(metrics)
 
 # Combine results if multiple datasets were processed
@@ -237,10 +229,7 @@ if len(datasets) == 2:
     
     # Calculate metrics for combined results
     logging.info("Calculating combined metrics...")
-    combined_metrics, _ = get_metrics(
-        combined_eval_output,
-        include_antifraud_in_overall=args.include_antifraud_in_overall,
-    )
+    combined_metrics, _ = get_metrics(combined_eval_output)
     metrics_list.append(combined_metrics)
 
 # Generate and display results summary table
@@ -285,4 +274,4 @@ logging.info("\n" + str(table))
 
 logging.info("Benchmark pipeline completed successfully!")
 logging.info(f"Results saved to: {results_dir}")
-logging.info(f"Log file: {log_path}")
+logging.info(f"Log file: {log_path}") 
