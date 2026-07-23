@@ -5,14 +5,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![HuggingFace](https://img.shields.io/badge/🤗-Datasets-yellow.svg)](https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench)
-[![Paper](https://img.shields.io/badge/📄-Coming_Soon-orange.svg)](#)
 [![Habr Article](https://img.shields.io/badge/📰-Habr-blue.svg)](https://habr.com/ru/companies/mts_ai/articles/953292/)
 
 **The first comprehensive Russian OCR benchmark for multimodal large language models**
 
 *Make informed decisions when choosing multimodal models for production: evaluate on real-world business documents*
 
-[🤗 Dataset (Validation)](https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench) • [📖 Documentation](#) • [🏆 Leaderboard](#-leaderboard) • [📰 Habr Article (RU)](https://habr.com/ru/companies/mts_ai/articles/953292/)
+[🤗 Dataset (Validation)](https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench) • [🏆 Leaderboard](#-leaderboard) • [📰 Habr Article (RU)](https://habr.com/ru/companies/mts_ai/articles/953292/)
 
 </div>
 
@@ -58,10 +57,11 @@ Modern businesses need AI that can understand documents, contracts, tables, diag
 
 ### 📸 Example Documents from the Benchmark
 
-<div align="center">
-<img src="assets/preview.jpg" alt="MWSVisionBench Sample Documents" width="100%">
-<p><em>Representative samples from MWSVisionBench: contracts, reports, technical diagrams, charts, floor plans, and handwritten notes including even musical notation</em></p>
-</div>
+![Representative samples from MWSVisionBench](assets/preview.jpg)
+
+*Representative samples from MWSVisionBench: contracts, reports, technical
+diagrams, charts, floor plans, and handwritten notes including even musical
+notation.*
 
 ---
 
@@ -336,23 +336,12 @@ This benchmark was inspired by and adapted from [OCRBench v2](https://github.com
 We welcome contributions from the community! Whether you've found a bug, have a feature request, or want to improve documentation, your input is valuable.
 
 ### How to Contribute
-- **Report Issues**: Found a bug or inconsistency? [Open an issue](https://github.com/mtsai/MWS-Vision-Bench/issues)
+- **Report Issues**: Found a bug or inconsistency? [Open an issue](https://github.com/mts-ai/MWS-Vision-Bench/issues)
 - **Feature Requests**: Have ideas for improvement? We'd love to hear them
 - **Pull Requests**: Code improvements and documentation updates are welcome
-- **Discussions**: Questions or want to share your results? Start a [discussion](https://github.com/mtsai/MWS-Vision-Bench/discussions)
+- **Discussions**: Questions or want to share your results? Start a [discussion](https://github.com/mts-ai/MWS-Vision-Bench/discussions)
 
 Your input helps make MWSVisionBench better for the entire community!
-
-### 🗺️ Roadmap
-
-- [x] 📊 Release validation dataset on HuggingFace
-- [x] 💻 Open-source evaluation code
-- [x] 📰 Publish detailed analysis on Habr
-- [ ] 🏆 Interactive leaderboard on HuggingFace Spaces
-- [ ] 📝 Academic paper publication
-- [ ] 📈 Expand leaderboard with more model results
-
-Have suggestions for the roadmap? Let us know!
 
 ---
 
