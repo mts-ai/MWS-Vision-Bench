@@ -245,14 +245,6 @@ python run_benchmark.py \
     --model_name "gpt-4o-mini" \
     --api_key "your-openai-key" \
     --dataset_family antifraud
-
-# Optional experimental Overall that includes anti-fraud.
-# By default anti-fraud is reported separately.
-python run_benchmark.py \
-    --model_name "gpt-4o-mini" \
-    --api_key "your-openai-key" \
-    --dataset_family antifraud \
-    --include_antifraud_in_overall
 ```
 
 **⚡ Performance Tips:**
@@ -295,11 +287,10 @@ balanced accuracy requires the full three-class confusion matrix. It is not a
 plain mean of independent per-item scores.
 
 Anti-fraud is an experimental `AF v0.1` category. It is displayed separately
-and is excluded from the main Overall score by default, preserving
-comparability with earlier benchmark results. Related source and edited images
-can occur in different splits, and image dimensions correlate with labels.
-These limitations are disclosed for reproducibility; a future dataset version
-will group related images and normalize technical cues.
+and is excluded from the main Overall score, preserving comparability with
+earlier benchmark results. It is released for research and model comparison,
+not as a universal or production-grade anti-fraud score. The experimental
+dataset can be optimized against, which is another reason to keep AF separate.
 
 This category measures general-purpose multimodal language models and is not a
 replacement for a dedicated production fraud-detection system.

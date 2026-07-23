@@ -19,7 +19,7 @@ from typing import List, Dict, Any
 from prettytable import PrettyTable
 
 # Local application imports
-from src.evaluation.get_score_ru import get_metrics
+from src.evaluation.get_score_ru import get_metrics, get_summary_score
 from src.utils.dataset_loader import load_benchmark_datasets
 
 # Setup command line argument parser
@@ -58,8 +58,6 @@ parser.add_argument('--max_workers', type=int, default=None,
                     help='Number of parallel workers for inference (if not set, uses model-specific default)')
 parser.add_argument('--dataset_family', choices=('vision', 'antifraud'), default='vision',
                     help='HuggingFace benchmark family to load (default: vision)')
-parser.add_argument('--include_antifraud_in_overall', action='store_true',
-                    help='Include antifraud in Overall (excluded by default for leaderboard compatibility)')
 args = parser.parse_args()
 
 # Configuration constants
@@ -210,13 +208,14 @@ for i, (dataset, split_name) in enumerate(zip(datasets, split_names)):
 # Calculate metrics for each processed part
 logging.info("Calculating metrics for each part...")
 metrics_list: List[Dict[str, Any]] = []
+summary_scores: List[float] = []
 for i, eval_path in enumerate(eval_paths):
     logging.info(f"Calculating metrics for part {i+1}: {eval_path}")
-    metrics, _ = get_metrics(
-        eval_path,
-        include_antifraud_in_overall=args.include_antifraud_in_overall,
-    )
+    metrics, detailed = get_metrics(eval_path)
     metrics_list.append(metrics)
+    summary_scores.append(
+        get_summary_score(metrics, detailed, args.dataset_family)
+    )
 
 # Combine results if multiple datasets were processed
 if len(datasets) == 2:
@@ -237,11 +236,15 @@ if len(datasets) == 2:
     
     # Calculate metrics for combined results
     logging.info("Calculating combined metrics...")
-    combined_metrics, _ = get_metrics(
-        combined_eval_output,
-        include_antifraud_in_overall=args.include_antifraud_in_overall,
-    )
+    combined_metrics, combined_detailed = get_metrics(combined_eval_output)
     metrics_list.append(combined_metrics)
+    summary_scores.append(
+        get_summary_score(
+            combined_metrics,
+            combined_detailed,
+            args.dataset_family,
+        )
+    )
 
 # Generate and display results summary table
 logging.info("Generating results summary table...")
@@ -268,15 +271,11 @@ for metric in sorted(all_metrics):
             row.append(str(score))
     table.add_row(row)
 
-# Calculate and add average scores row
-average_row = ["average"]
-for metrics in metrics_list:
-    numeric_scores = [
-        score for metric in sorted(all_metrics)
-        if (score := metrics.get(metric)) is not None and isinstance(score, float)
-    ]
-    avg_score = sum(numeric_scores) / len(numeric_scores) if numeric_scores else 0.0
-    average_row.append(f"{avg_score:.3f}")
+# Add the five-category Overall for the vision family, or AF for antifraud.
+summary_label = "anti-fraud score" if args.dataset_family == "antifraud" else "average"
+average_row = [summary_label]
+for score in summary_scores:
+    average_row.append(f"{score:.3f}")
 table.add_row(average_row)
 
 # Display final results
