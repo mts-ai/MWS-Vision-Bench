@@ -147,7 +147,7 @@ def get_metrics(json_path: str) -> Tuple[Dict[str, float], Dict[str, Any]]:
         )
     if antifraud_items:
         metrics["antifraud (document_verification)"] = antifraud_avg
-    
+
     # Leaderboard Overall is the macro-average of the five original category
     # scores. Anti-fraud is deliberately excluded and reported separately.
     metric_averages = []
