@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="86" height="20" role="img" aria-label="article: Habr">
+  <title>Habr article</title>
+  <rect width="49" height="20" rx="3" fill="#555"/>
+  <rect x="49" width="37" height="20" rx="3" fill="#1f6f9b"/>
+  <path d="M49 0h4v20h-4z" fill="#555"/>
+  <g fill="#fff" font-family="Verdana,DejaVu Sans,sans-serif" font-size="11" text-anchor="middle">
+    <text x="24.5" y="14">article</text>
+    <text x="67.5" y="14">Habr</text>
+  </g>
+</svg>

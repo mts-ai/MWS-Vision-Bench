@@ -2,11 +2,16 @@
 
 <div align="center">
 
+[![License: MIT](assets/badges/license.svg)](LICENSE.txt)
+[![Python 3.10+](assets/badges/python.svg)](https://www.python.org/downloads/)
+[![OCR Dataset](assets/badges/ocr-dataset.svg)](https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench)
+[![Anti-fraud Dataset](assets/badges/antifraud-dataset.svg)](https://huggingface.co/datasets/MTSAIR/MWS-Antifraud-Bench)
+[![Leaderboard](assets/badges/leaderboard.svg)](#-leaderboard)
+[![Habr Article](assets/badges/habr.svg)](https://habr.com/ru/articles/1062176/)
+
 **A Russian-language document benchmark for multimodal large language models**
 
 *Make informed decisions when choosing multimodal models for production: evaluate on real-world business documents*
-
-[🤗 OCR Dataset (Validation)](https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench) • [🧪 Anti-fraud Dataset (Validation)](https://huggingface.co/datasets/MTSAIR/MWS-Antifraud-Bench) • [🏆 Leaderboard](#-leaderboard) • [📰 Habr Article (RU)](https://habr.com/ru/companies/mts_ai/articles/953292/)
 
 </div>
 

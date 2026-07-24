@@ -3,6 +3,7 @@ from pathlib import Path
 
 
 README = Path(__file__).resolve().parents[1] / "README.md"
+REPO_ROOT = README.parent
 
 
 def _leaderboard_tables():
@@ -21,6 +22,22 @@ def _leaderboard_tables():
 
 
 class ReadmeLeaderboardTests(unittest.TestCase):
+    def test_header_badges_are_local_and_present(self):
+        readme = README.read_text(encoding="utf-8")
+        badge_paths = (
+            "assets/badges/license.svg",
+            "assets/badges/python.svg",
+            "assets/badges/ocr-dataset.svg",
+            "assets/badges/antifraud-dataset.svg",
+            "assets/badges/leaderboard.svg",
+            "assets/badges/habr.svg",
+        )
+
+        self.assertNotIn("img.shields.io", readme)
+        for badge_path in badge_paths:
+            self.assertIn(f"]({badge_path})", readme)
+            self.assertTrue((REPO_ROOT / badge_path).is_file(), badge_path)
+
     def test_readme_separates_core_overall_from_experimental_antifraud(self):
         readme = README.read_text(encoding="utf-8")
         core_heading = "Core Task Types — Included in `Overall`"

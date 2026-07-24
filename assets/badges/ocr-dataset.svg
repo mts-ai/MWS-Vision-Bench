@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="112" height="20" role="img" aria-label="dataset: OCR">
+  <title>OCR validation dataset</title>
+  <rect width="59" height="20" rx="3" fill="#555"/>
+  <rect x="59" width="53" height="20" rx="3" fill="#d5a500"/>
+  <path d="M59 0h4v20h-4z" fill="#555"/>
+  <g fill="#fff" font-family="Verdana,DejaVu Sans,sans-serif" font-size="11" text-anchor="middle">
+    <text x="29.5" y="14">dataset</text>
+    <text x="85.5" y="14">OCR</text>
+  </g>
+</svg>
