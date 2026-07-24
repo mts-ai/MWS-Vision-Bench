@@ -1,8 +1,8 @@
 """
-MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+MWSVisionBench - Russian document benchmark for multimodal LLMs
 
 This file: Evaluation script for the five document-understanding task types
-plus the experimental antifraud category:
+plus the experimental anti-fraud category:
 - text grounding ru
 - reasoning VQA ru  
 - full-page OCR ru
@@ -21,13 +21,7 @@ import re
 import time
 import warnings
 from multiprocessing import Pool, cpu_count
-from typing import Any, Dict, List
-
-# Suppress specific warnings that clutter output
-warnings.filterwarnings('ignore', message='.*pkg_resources.*')
-warnings.filterwarnings('ignore', message='.*BLEU score.*')
-warnings.filterwarnings('ignore', category=UserWarning, module='jieba')
-warnings.filterwarnings('ignore', category=UserWarning, module='nltk')
+from typing import Any, Dict
 
 # Third-party imports
 from tqdm import tqdm
@@ -56,8 +50,15 @@ except ImportError:
     from metrics.vqa_metric import vqa_evaluation
 
 
+# Suppress specific warnings that clutter output
+warnings.filterwarnings('ignore', message='.*pkg_resources.*')
+warnings.filterwarnings('ignore', message='.*BLEU score.*')
+warnings.filterwarnings('ignore', category=UserWarning, module='jieba')
+warnings.filterwarnings('ignore', category=UserWarning, module='nltk')
+
+
 def _parse_antifraud_predict(raw_predict: str) -> Dict[str, Any]:
-    """Parse the JSON answer produced for an antifraud item."""
+    """Parse the JSON answer produced for an anti-fraud item."""
     valid_labels = {"ai_gen", "edited", "original"}
     if not isinstance(raw_predict, str):
         return {"predicted_label": None, "arguments": ""}
@@ -249,7 +250,7 @@ def process_single_item(data_item: Dict[str, Any]) -> Dict[str, Any]:
                 )
             except Exception as e:
                 print(
-                    "Error in antifraud reason evaluation for item "
+                    "Error in anti-fraud reason evaluation for item "
                     f"{data_item.get('id', 'unknown')}: {e}"
                 )
                 data_item["reason_score"] = 0.0
@@ -291,60 +292,6 @@ def evaluate_parallel(data_list, num_processes=None):
         ))
     
     return results
-
-
-def calculate_metrics(results: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Calculate metrics for each task type.
-    
-    Args:
-        results: List of processed evaluation items with scores
-        
-    Returns:
-        Dictionary containing calculated metrics and summary statistics
-    """
-    task_metrics = {}
-    
-    # Group by task type
-    for item in results:
-        task_type = item["type"]
-        if task_type not in task_metrics:
-            task_metrics[task_type] = []
-        
-        # Ensure score is a number, not dict or other type
-        score = item.get("score", 0)
-        if isinstance(score, (int, float)):
-            task_metrics[task_type].append(score)
-        else:
-            print(f"WARNING: Non-numeric score in item {item.get('id', 'unknown')}: {score}")
-            task_metrics[task_type].append(0)
-    
-    # Calculate average for each type
-    summary = {}
-    total_score = 0
-    total_count = 0
-    
-    for task_type, scores in task_metrics.items():
-        avg_score = sum(scores) / len(scores) if scores else 0
-        summary[task_type] = {
-            "avg_score": avg_score,
-            "count": len(scores),
-            "total_score": sum(scores)
-        }
-        total_score += sum(scores)
-        total_count += len(scores)
-        
-        # Don't print here - leave it for run_benchmark.py
-        pass
-    
-    # Overall average
-    overall_avg = total_score / total_count if total_count > 0 else 0
-    summary["overall"] = {
-        "avg_score": overall_avg,
-        "count": total_count,
-        "total_score": total_score
-    }
-    
-    return summary
 
 
 def main() -> None:
@@ -398,9 +345,6 @@ def main() -> None:
     
     # Evaluate
     results = evaluate_parallel(data_list, args.num_processes)
-    
-    # Calculate metrics (no printing here)
-    metrics = calculate_metrics(results)
     
     # Save results
     print(f"\nSaving results to {args.output_path}")

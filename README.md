@@ -2,16 +2,16 @@
 
 <div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code License: MIT](https://img.shields.io/badge/Code%20License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![HuggingFace](https://img.shields.io/badge/🤗-Datasets-yellow.svg)](https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench)
+[![Hugging Face](https://img.shields.io/badge/🤗-Datasets-yellow.svg)](https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench)
 [![Habr Article](https://img.shields.io/badge/📰-Habr-blue.svg)](https://habr.com/ru/companies/mts_ai/articles/953292/)
 
-**The first comprehensive Russian OCR benchmark for multimodal large language models**
+**A Russian-language document benchmark for multimodal large language models**
 
 *Make informed decisions when choosing multimodal models for production: evaluate on real-world business documents*
 
-[🤗 Dataset (Validation)](https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench) • [🏆 Leaderboard](#-leaderboard) • [📰 Habr Article (RU)](https://habr.com/ru/companies/mts_ai/articles/953292/)
+[🤗 OCR Dataset (Validation)](https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench) • [🧪 Anti-fraud Dataset (Validation)](https://huggingface.co/datasets/MTSAIR/MWS-Antifraud-Bench) • [🏆 Leaderboard](#-leaderboard) • [📰 Habr Article (RU)](https://habr.com/ru/companies/mts_ai/articles/953292/)
 
 </div>
 
@@ -32,10 +32,12 @@ in `Overall`, which remains the mean of the five original benchmark categories.
 
 ## Update — February 16, 2026
 
-### New: VQA category update
+### VQA category update
 
-We updated the **Reasoning VQA (ru)** category to improve evaluation robustness. Revised questions and answers only (images remain unchanged).
-Results are not directly comparable to versions prior to Feb 16, 2026 - for VQA and overall columns.
+We clarified the wording and accepted-answer formats for part of the
+**Reasoning VQA (ru)** category; the images remained unchanged. VQA and
+`Overall` results are not directly comparable with versions from before
+February 16, 2026.
 
 This update improves reliability of reasoning-based evaluation while keeping the benchmark structure intact.
 
@@ -43,17 +45,22 @@ This update improves reliability of reasoning-based evaluation while keeping the
 
 ## 🎯 Overview
 
-**MWSVisionBench** is a cutting-edge benchmark designed to evaluate multimodal large language models on challenging OCR and document understanding tasks in Russian. Unlike existing benchmarks, MWSVisionBench focuses on **real-world business scenarios** with authentic documents that companies actually encounter.
+**MWSVisionBench** evaluates multimodal large language models on OCR and
+document-understanding tasks in Russian. Its core dataset covers business,
+technical, and handwritten document types. The experimental anti-fraud
+dataset separately tests classification and explanation of original,
+manually edited, and AI-generated document images.
 
 ### 🔥 Why MWSVisionBench?
 
-Modern businesses need AI that can understand documents, contracts, tables, diagrams, and handwritten notes. MWSVisionBench tests exactly these capabilities using:
+Document-processing systems need to handle contracts, tables, diagrams, and
+handwritten notes. The core benchmark covers these capabilities using:
 
-- 📄 **Real business documents** - contracts, reports, invoices, diagrams
+- 📄 **Business-style documents** - contracts, reports, invoices, diagrams
 - 📊 **Complex layouts** - tables, charts, mixed text-graphics content
 - ✍️ **Handwritten content** - including musical notation and forms
 - 🏗️ **Structured extraction** - JSON, Markdown, coordinate-based tasks
-- 🎯 **Business-relevant scenarios** - the tasks companies actually need
+- 🎯 **Document-oriented scenarios** - OCR, extraction, localization, and VQA
 
 ### 📸 Example Documents from the Benchmark
 
@@ -67,29 +74,41 @@ notation.*
 
 ## 🚀 Key Features
 
-### 📚 **Original Russian Dataset**
-- **2,580 question-answer pairs** across **800 unique images**
-- **Hand-curated content** - brand new data, guaranteed not in training sets of existing models
-- **Real-world documents** - business documents, handwritten notes
+### 📚 **Russian Document Datasets**
+- **Core OCR benchmark:** 2,580 question-answer pairs across 800 images
+- **Experimental anti-fraud benchmark:** 430 document images across public
+  validation and private test sets
+- **Manually assembled and annotated content**
+- **Business and technical documents**, including handwritten notes
 - **Professional annotation** with human experts
 
-### 🎨 **5 Core Task Types**
+### 🎨 **Core Task Types — Included in `Overall`**
+
+These five category scores are averaged with equal weight to produce
+`Overall`:
+
 1. **📝 Text OCR** - Basic image-to-text conversion
 2. **🏗️ Structured OCR** - Image-to-Markdown conversion (requiring layout understanding)
 3. **📍 Text Localization** - Find and return bounding boxes for specific text
 4. **🗂️ Key Information Extraction** - Extract structured data (JSON format)
 5. **❓ Visual Question Answering** - Answer questions about document content
 
-### 🔧 **Production-Ready Architecture**
+### 🧪 **Experimental Task — Reported Separately**
+
+6. **🛡️ Document Anti-fraud** - Classify a document image as `original`,
+   `edited`, or `ai_gen` and explain the decision. The AF v0.1 score is shown
+   separately and is not included in `Overall`.
+
+### 🔧 **Benchmark Runner**
 - **Unified API support** - OpenAI, GigaChat, vLLM (OpenAI-compatible)
-- **Automatic model routing** - smart inference script selection
+- **Single CLI** - model-specific adapters behind one benchmark command
 - **Parallel evaluation** - fast processing with multiprocessing
 - **Comprehensive metrics** - adapted from [OCRBench v2](https://github.com/Yuliang-Liu/MultimodalOCR/tree/main/OCRBench_v2) with Russian optimizations
 - **API-first approach** - designed for reproducible evaluation through endpoints
 
 ## 📊 Leaderboard
 
-> **Full leaderboard and detailed analysis**: [📰 Habr Article (Russian)](https://habr.com/ru/companies/mts_ai/articles/953292/)
+> **Background and original benchmark analysis**: [📰 Habr Article (Russian)](https://habr.com/ru/companies/mts_ai/articles/953292/)
 
 ### 🔓 Validation Set (Public)
 
@@ -223,7 +242,7 @@ pip install -r requirements.txt
 
 ### Running the Benchmark
 
-**The dataset automatically downloads from HuggingFace!** No manual download needed.
+**The dataset automatically downloads from Hugging Face!** No manual download needed.
 
 ```bash
 # Simplest way - dataset downloads automatically
@@ -247,11 +266,11 @@ python run_benchmark.py \
     --model_name "Qwen/Qwen2.5-VL-7B-Instruct" \
     --api_url "http://your-vllm-server/v1/chat/completions"
 
-# Adjust parallelism with --max_workers (default: 10 for OpenAI, 1 for GigaChat)
+# Adjust parallelism with --max_workers (default: 5 for OpenAI-compatible APIs, 1 for GigaChat)
 python run_benchmark.py \
     --model_name "gpt-4o-mini" \
     --api_key "your-openai-key" \
-    --max_workers 30  # Recommended for high-tier OpenAI accounts
+    --max_workers 20
 
 # Experimental anti-fraud validation set
 python run_benchmark.py \
@@ -270,8 +289,9 @@ python run_benchmark.py \
 ```
 
 **⚡ Performance Tips:**
-- **Default**: 10 parallel workers (suitable for most APIs)
-- **High-tier OpenAI/fast models**: Use `--max_workers 30` for faster processing
+- **OpenAI-compatible default**: 5 parallel workers
+- **Higher-throughput endpoints**: Increase `--max_workers` cautiously and
+  stay within the provider's concurrency and rate limits
 - **GigaChat**: Use `--max_workers 1` (API has strict rate limits)
 - **Local models**: Adjust based on GPU memory (typically 1-5)
 
@@ -320,10 +340,9 @@ replacement for a dedicated production fraud-detection system.
 
 ---
 
-## 📄 Paper & Article
+## 📄 Article
 
-- 📰 **[Habr Article (Russian)](https://habr.com/ru/companies/mts_ai/articles/953292/)** - detailed analysis and results
-- 📝 **Academic Paper** - Coming soon
+- 📰 **[Habr Article (Russian)](https://habr.com/ru/companies/mts_ai/articles/953292/)** - original benchmark analysis and results
 
 ---
 
@@ -349,9 +368,10 @@ Your input helps make MWSVisionBench better for the entire community!
 
 ## 📁 Dataset
 
-### 🤗 HuggingFace Datasets (Recommended)
+### 🤗 Hugging Face Datasets (Recommended)
 
-The dataset is hosted on HuggingFace Hub and **automatically downloads** when you run the benchmark:
+The datasets are hosted on the Hugging Face Hub and **automatically
+downloaded** when you run the benchmark:
 
 - **🔓 Validation Set (Public)**: [`MTSAIR/MWS-Vision-Bench`](https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench)
   - 1,302 questions on 400 unique images

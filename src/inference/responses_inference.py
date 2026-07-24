@@ -1,5 +1,5 @@
 """
-MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+MWSVisionBench - Russian document benchmark for multimodal LLMs
 
 This file: OpenAI Responses API inference implementation using the unified base class.
 Specialized for GPT-5 models with reasoning capabilities.
@@ -11,6 +11,7 @@ Licensed under MIT License
 # Standard library imports
 import base64
 import logging
+import mimetypes
 import os
 import sys
 import time
@@ -28,7 +29,7 @@ except ImportError:
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.inference.inference_base import InferenceBase
+from src.inference.inference_base import InferenceBase  # noqa: E402
 
 
 class ResponsesInference(InferenceBase):
@@ -46,7 +47,9 @@ class ResponsesInference(InferenceBase):
         return None  # Using OpenAI client, not direct requests
     
     def get_default_max_workers(self) -> int:
-        return 5  # Responses API has rate limits - but for tier 5 feel free to increase up to 30
+        # Conservative default. Increase only within the account's documented
+        # concurrency and rate limits.
+        return 5
     
     def initialize_client(self):
         """Initialize OpenAI Responses API client"""
@@ -94,9 +97,6 @@ class ResponsesInference(InferenceBase):
             logging.error(f"[ERROR] Failed to load image {image_path}: {e}")
             return None
         
-        # Get supported parameters
-        params = self.get_supported_params()
-        
         # Prepare messages
         input_messages = []
         
@@ -111,11 +111,17 @@ class ResponsesInference(InferenceBase):
             })
         
         # Add user message with image (Responses API format!)
+        image_mime, _ = mimetypes.guess_type(image_path)
+        if not image_mime or not image_mime.startswith("image/"):
+            image_mime = "image/png"
         input_messages.append({
             "role": "user",
             "content": [
                 {"type": "input_text", "text": question},
-                {"type": "input_image", "image_url": f"data:image/png;base64,{img_b64}"}
+                {
+                    "type": "input_image",
+                    "image_url": f"data:{image_mime};base64,{img_b64}",
+                },
             ]
         })
         

@@ -1,5 +1,5 @@
 """
-MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+MWSVisionBench - Russian document benchmark for multimodal LLMs
 
 This file: Yandex Alice AI VLM API Inference
 
@@ -57,4 +57,3 @@ class AliceAiVlmInference(OpenAIInference):
         vlm_response_data = resp.json()["vlm"][0]
         answer = vlm_response_data["Response"]
         return answer
-        

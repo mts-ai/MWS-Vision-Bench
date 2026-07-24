@@ -10,6 +10,7 @@ import requests
 
 from src.inference.api_inference import OpenAIInference
 from src.inference.inference_unified import create_inference_handler
+from src.inference.responses_inference import ResponsesInference
 
 
 class InferenceImportTests(unittest.TestCase):
@@ -79,6 +80,44 @@ class OpenAIInferenceTests(unittest.TestCase):
                     use_streaming=True,
                     deadline=1200.0,
                 )
+
+
+class ResponsesInferenceTests(unittest.TestCase):
+    def test_jpeg_payload_uses_matching_media_type(self):
+        handler = ResponsesInference()
+        with tempfile.TemporaryDirectory() as tmp:
+            image_path = Path(tmp) / "document.jpg"
+            image_path.write_bytes(b"\xff\xd8\xff\xd9")
+            handler.args = SimpleNamespace(
+                model_name="gpt-5",
+                base_path=None,
+            )
+            handler.processed_ids = set()
+            response = SimpleNamespace(
+                output=[
+                    SimpleNamespace(
+                        content=[SimpleNamespace(text="ok")]
+                    )
+                ]
+            )
+            handler.client = SimpleNamespace(
+                responses=SimpleNamespace(
+                    create=Mock(return_value=response)
+                )
+            )
+            with patch.dict("os.environ", {}, clear=True):
+                result = handler.process_item(
+                    {
+                        "id": "1",
+                        "image_path": str(image_path),
+                        "question": "question",
+                    }
+                )
+
+        payload = handler.client.responses.create.call_args.kwargs
+        image_url = payload["input"][0]["content"][1]["image_url"]
+        self.assertTrue(image_url.startswith("data:image/jpeg;base64,"))
+        self.assertEqual(result["predict"], "ok")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """
-MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+MWSVisionBench - Russian document benchmark for multimodal LLMs
 
 This package: Utility functions and helpers
 

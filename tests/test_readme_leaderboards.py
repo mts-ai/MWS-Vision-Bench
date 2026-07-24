@@ -21,6 +21,40 @@ def _leaderboard_tables():
 
 
 class ReadmeLeaderboardTests(unittest.TestCase):
+    def test_readme_separates_core_overall_from_experimental_antifraud(self):
+        readme = README.read_text(encoding="utf-8")
+        core_heading = "Core Task Types — Included in `Overall`"
+        experimental_heading = "Experimental Task — Reported Separately"
+
+        self.assertEqual(readme.count(core_heading), 1)
+        self.assertEqual(readme.count(experimental_heading), 1)
+        self.assertLess(
+            readme.index(core_heading),
+            readme.index(experimental_heading),
+        )
+        self.assertIn(
+            "These five category scores are averaged with equal weight",
+            readme,
+        )
+        self.assertIn("6. **🛡️ Document Anti-fraud**", readme)
+        self.assertIn(
+            "separately and is not included in `Overall`",
+            readme,
+        )
+
+    def test_readme_has_no_stale_release_claims(self):
+        readme = README.read_text(encoding="utf-8")
+        stale_phrases = (
+            "guaranteed not in training sets",
+            "Academic Paper",
+            "Coming soon",
+            "default: 10 for OpenAI",
+            "Production-Ready Architecture",
+            "Full leaderboard and detailed analysis",
+        )
+        for phrase in stale_phrases:
+            self.assertNotIn(phrase, readme)
+
     def test_validation_and_test_tables_have_antifraud_column(self):
         tables = _leaderboard_tables()
         self.assertEqual(len(tables), 2)

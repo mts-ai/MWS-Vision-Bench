@@ -1,6 +1,7 @@
-"""MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+"""MWSVisionBench - Russian document benchmark for multimodal LLMs
 
-This file: Main benchmark runner script for executing inference and evaluation pipeline
+This file: Main runner for the five core OCR/document-understanding tasks and
+the separate experimental anti-fraud task.
 
 Copyright (c) 2024 MWS AI
 Licensed under MIT License
@@ -25,7 +26,9 @@ from src.utils.dataset_loader import load_benchmark_datasets
 
 # Setup command line argument parser
 parser = argparse.ArgumentParser(
-    description='MWSVisionBench - Run OCR benchmark inference and evaluation pipeline'
+    description=(
+        "MWSVisionBench - Run document benchmark inference and evaluation"
+    )
 )
 parser.add_argument('--model_name', default="Qwen/Qwen2.5-VL-7B-Instruct",
                     help='Model name to use for inference')
@@ -36,15 +39,15 @@ parser.add_argument('--base_path', default=None,
 parser.add_argument('--api_key', default=None,
                     help='API key for authentication')
 parser.add_argument('--data_path', nargs='+', default=None,
-                    help='Local JSON files to process (if not set, downloads from HuggingFace)')
+                    help='Local JSON files to process (if not set, downloads from Hugging Face)')
 parser.add_argument('--hf_token', default=None,
-                    help='HuggingFace token for private test dataset (or set HF_TOKEN env var)')
+                    help='Hugging Face token for private test dataset (or set HF_TOKEN env var)')
 parser.add_argument('--hf_revision', default=None,
-                    help='HuggingFace validation revision (branch name or commit hash)')
+                    help='Hugging Face validation revision (branch name or commit hash)')
 parser.add_argument('--hf_test_revision', default=None,
-                    help='HuggingFace test revision (defaults to --hf_revision)')
+                    help='Hugging Face test revision (defaults to --hf_revision)')
 parser.add_argument('--cache_dir', default=None,
-                    help='Cache directory for HuggingFace datasets')
+                    help='Cache directory for Hugging Face datasets')
 parser.add_argument('--sample', type=int, default=None,
                     help='Number of samples to process (for quick testing)')
 parser.add_argument('--start_index', type=int, default=0,
@@ -60,7 +63,7 @@ parser.add_argument('--use_base_prompt', action='store_true',
 parser.add_argument('--max_workers', type=int, default=None,
                     help='Number of parallel workers for inference (if not set, uses model-specific default)')
 parser.add_argument('--dataset_family', choices=('vision', 'antifraud'), default='vision',
-                    help='HuggingFace benchmark family to load (default: vision)')
+                    help='Hugging Face benchmark family to load (default: vision)')
 args = parser.parse_args()
 
 # Configuration constants
@@ -276,7 +279,7 @@ for metric in sorted(all_metrics):
     table.add_row(row)
 
 # Add the five-category Overall for the vision family, or AF for antifraud.
-summary_label = "anti-fraud score" if args.dataset_family == "antifraud" else "average"
+summary_label = "Anti-fraud" if args.dataset_family == "antifraud" else "Overall"
 average_row = [summary_label]
 for score in summary_scores:
     average_row.append(f"{score:.3f}")

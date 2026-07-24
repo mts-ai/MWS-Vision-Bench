@@ -1,7 +1,8 @@
-"""Dataset loader with graceful HuggingFace fallback
+"""Dataset loader with graceful Hugging Face fallback
 
-This module provides smart dataset loading for MWS-Vision-Bench:
-- Automatic download from HuggingFace (default)
+This module loads the core MWS-Vision-Bench datasets or the experimental
+MWS-Antifraud-Bench datasets:
+- Automatic download from Hugging Face (default)
 - Graceful fallback if test set is not accessible
 - Support for local files (development mode)
 - Sample mode for quick testing
@@ -39,24 +40,24 @@ def load_benchmark_datasets(
     dataset_family: str = "vision"
 ) -> Tuple[List[List[Dict[str, Any]]], List[str]]:
     """
-    Load benchmark datasets with smart fallback logic.
+    Load one benchmark family with graceful private-test fallback.
     
     Priority:
     1. If data_paths provided → load local JSON files (requires base_path)
-    2. Otherwise → download from HuggingFace with graceful fallback:
+    2. Otherwise → download from Hugging Face with graceful fallback:
        - Always loads public validation set
        - Tries to load private test set (silently skips if no access)
     
     Args:
-        data_paths: Local JSON file paths (if None, use HuggingFace)
+        data_paths: Local JSON file paths (if None, use Hugging Face)
         base_path: Base path for local images (required with data_paths)
-        hf_token: HuggingFace token (for private test set access)
+        hf_token: Hugging Face token (for private test set access)
         hf_revision: Validation dataset revision (branch or commit hash)
         hf_test_revision: Test dataset revision. Defaults to ``hf_revision``.
         cache_dir: Cache directory for HF datasets (default: ~/.cache/huggingface)
         sample: Number of samples to load (for quick testing)
         silent: If True, no warnings for missing test access
-        dataset_family: ``vision`` or ``antifraud`` HuggingFace repositories
+        dataset_family: ``vision`` or ``antifraud`` Hugging Face repositories
         
     Returns:
         Tuple of (datasets, split_names):
@@ -64,7 +65,7 @@ def load_benchmark_datasets(
         - split_names: Names of splits (e.g., ['validation', 'test'])
         
     Examples:
-        # Load from HuggingFace (default)
+        # Load from Hugging Face (default)
         datasets, names = load_benchmark_datasets()
         
         # Load with test set (requires token)
@@ -84,7 +85,7 @@ def load_benchmark_datasets(
     if data_paths is not None:
         return _load_local_datasets(data_paths, base_path, sample)
     
-    # HuggingFace mode (default)
+    # Hugging Face mode (default)
     return _load_hf_datasets(
         hf_token,
         hf_revision,
@@ -150,16 +151,16 @@ def _load_hf_datasets(
     silent: bool,
     dataset_family: str = "vision"
 ) -> Tuple[List[List[Dict[str, Any]]], List[str]]:
-    """Load datasets from HuggingFace with graceful fallback.
+    """Load datasets from Hugging Face with graceful fallback.
     
     Args:
-        hf_token: HuggingFace token for private datasets
+        hf_token: Hugging Face token for private datasets
         hf_revision: Validation dataset revision (branch or commit hash)
         hf_test_revision: Test dataset revision. Defaults to ``hf_revision``.
         cache_dir: Cache directory
         sample: Number of samples to load
         silent: Suppress warnings
-        dataset_family: ``vision`` or ``antifraud`` HuggingFace repositories
+        dataset_family: ``vision`` or ``antifraud`` Hugging Face repositories
         
     Returns:
         Tuple of (datasets, split_names)
@@ -192,7 +193,7 @@ def _load_hf_datasets(
     split_str = "train" if sample is None else f"train[:{sample}]"
     
     # 1. Load validation set (public - always works)
-    print("📥 Downloading validation dataset from HuggingFace...")
+    print("📥 Downloading validation dataset from Hugging Face...")
     if sample:
         print(f"   ↳ Sampling first {sample} examples")
     
@@ -214,7 +215,7 @@ def _load_hf_datasets(
         print(f"✅ Validation dataset loaded ({len(val_data)} examples)")
     except Exception as e:
         raise RuntimeError(
-            f"❌ Failed to load validation dataset from HuggingFace.\n"
+            f"❌ Failed to load validation dataset from Hugging Face.\n"
             f"   Error: {e}\n"
             f"   Please check your internet connection.\n"
             f"   Dataset: https://huggingface.co/datasets/{validation_repo}"
@@ -260,10 +261,10 @@ def _convert_hf_to_list(
     split_name: str = "default",
     cache_namespace: str = "vision",
 ) -> List[Dict[str, Any]]:
-    """Convert HuggingFace dataset to list of dictionaries with cached images.
+    """Convert a Hugging Face dataset to dictionaries with cached images.
     
     Args:
-        hf_dataset: HuggingFace Dataset object
+        hf_dataset: Hugging Face Dataset object
         split_name: Name of the split (validation/test) to avoid cache collisions
         cache_namespace: Dataset family used to isolate cached images
         
@@ -370,8 +371,8 @@ def get_dataset_info(
     
     Args:
         data_paths: Local file paths to check
-        hf_token: HuggingFace token for checking private access
-        dataset_family: ``vision`` or ``antifraud`` HuggingFace repositories
+        hf_token: Hugging Face token for checking private access
+        dataset_family: ``vision`` or ``antifraud`` Hugging Face repositories
         
     Returns:
         Dictionary with dataset availability information
@@ -391,7 +392,7 @@ def get_dataset_info(
         info["message"] = f"Local files: {data_paths}"
         return info
     
-    # Check HuggingFace access
+    # Check Hugging Face access
     if dataset_family not in HF_DATASET_REPOSITORIES:
         raise ValueError(
             f"Unsupported dataset_family={dataset_family!r}; "

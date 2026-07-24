@@ -1,7 +1,7 @@
 """
-MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+MWSVisionBench - Russian document benchmark for multimodal LLMs
 
-This file: Metrics calculation for document understanding and antifraud
+This file: Leaderboard metrics for document understanding and anti-fraud
 
 Copyright (c) 2024 MWS AI
 Licensed under MIT License
@@ -61,7 +61,7 @@ def _compute_antifraud_details(
 
 
 def _compute_antifraud_score(items: List[Dict[str, Any]]) -> float:
-    """Calculate the combined antifraud classification and explanation score."""
+    """Calculate the combined anti-fraud classification/explanation score."""
     return float(_compute_antifraud_details(items)["score"])
 
 
@@ -148,7 +148,8 @@ def get_metrics(json_path: str) -> Tuple[Dict[str, float], Dict[str, Any]]:
     if antifraud_items:
         metrics["antifraud (document_verification)"] = antifraud_avg
     
-    # Calculate overall average as mean of metric averages (like old code)
+    # Leaderboard Overall is the macro-average of the five original category
+    # scores. Anti-fraud is deliberately excluded and reported separately.
     metric_averages = []
     if text_grounding_scores:
         metric_averages.append(text_grounding_avg)

@@ -1,5 +1,5 @@
 """
-MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+MWSVisionBench - Russian document benchmark for multimodal LLMs
 
 This file: GigaChat inference implementation using the unified base class
 

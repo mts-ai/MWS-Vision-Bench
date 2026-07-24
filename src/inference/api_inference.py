@@ -1,5 +1,5 @@
 """
-MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+MWSVisionBench - Russian document benchmark for multimodal LLMs
 
 This file: OpenAI-compatible inference implementation using the unified base class.
 Supports OpenAI API, vLLM endpoints, and other OpenAI-compatible APIs.
@@ -27,7 +27,7 @@ import requests
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.inference.inference_base import InferenceBase
+from src.inference.inference_base import InferenceBase  # noqa: E402
 
 
 class OpenAIInference(InferenceBase):
@@ -49,7 +49,9 @@ class OpenAIInference(InferenceBase):
         return "https://api.openai.com/v1/chat/completions"
     
     def get_default_max_workers(self) -> int:
-        return 5  # OpenAI hight tiers and private vLLM servers can easily handle higher parallelism - up to 30
+        # Conservative default. Increase only when the endpoint's documented
+        # concurrency and rate limits allow it.
+        return 5
     
     def initialize_client(self):
         """Initialize OpenAI API client"""
@@ -246,7 +248,7 @@ class OpenAIInference(InferenceBase):
                             use_streaming = False
                             logging.warning("⚠ Streaming not supported by API, switching to non-streaming mode")
                             continue  # Retry with non-streaming
-                    except:
+                    except (AttributeError, TypeError, ValueError):
                         pass
                     
                     logging.warning(
