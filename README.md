@@ -2,11 +2,6 @@
 
 <div align="center">
 
-[![Code License: MIT](https://img.shields.io/badge/Code%20License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Hugging Face](https://img.shields.io/badge/🤗-Datasets-yellow.svg)](https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench)
-[![Habr Article](https://img.shields.io/badge/📰-Habr-blue.svg)](https://habr.com/ru/companies/mts_ai/articles/953292/)
-
 **A Russian-language document benchmark for multimodal large language models**
 
 *Make informed decisions when choosing multimodal models for production: evaluate on real-world business documents*
@@ -27,6 +22,8 @@ for manually edited documents, a correct explanation of what was changed.
 
 Anti-fraud is reported as a standalone research metric and is **not** included
 in `Overall`, which remains the mean of the five original benchmark categories.
+
+[Read more about the anti-fraud experiment in our Habr article (Russian).](https://habr.com/ru/articles/1062176/)
 
 ---
 
