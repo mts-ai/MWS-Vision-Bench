@@ -1,6 +1,7 @@
-"""MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+"""MWSVisionBench - Russian document benchmark for multimodal LLMs
 
-This file: Main benchmark runner script for executing inference and evaluation pipeline
+This file: Main runner for the five core OCR/document-understanding tasks and
+the separate experimental anti-fraud task.
 
 Copyright (c) 2024 MWS AI
 Licensed under MIT License
@@ -12,6 +13,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 from datetime import datetime
 from typing import List, Dict, Any
 
@@ -19,12 +21,14 @@ from typing import List, Dict, Any
 from prettytable import PrettyTable
 
 # Local application imports
-from src.evaluation.get_score_ru import get_metrics
+from src.evaluation.get_score_ru import get_metrics, get_summary_score
 from src.utils.dataset_loader import load_benchmark_datasets
 
 # Setup command line argument parser
 parser = argparse.ArgumentParser(
-    description='MWSVisionBench - Run OCR benchmark inference and evaluation pipeline'
+    description=(
+        "MWSVisionBench - Run document benchmark inference and evaluation"
+    )
 )
 parser.add_argument('--model_name', default="Qwen/Qwen2.5-VL-7B-Instruct",
                     help='Model name to use for inference')
@@ -35,13 +39,15 @@ parser.add_argument('--base_path', default=None,
 parser.add_argument('--api_key', default=None,
                     help='API key for authentication')
 parser.add_argument('--data_path', nargs='+', default=None,
-                    help='Local JSON files to process (if not set, downloads from HuggingFace)')
+                    help='Local JSON files to process (if not set, downloads from Hugging Face)')
 parser.add_argument('--hf_token', default=None,
-                    help='HuggingFace token for private test dataset (or set HF_TOKEN env var)')
+                    help='Hugging Face token for private test dataset (or set HF_TOKEN env var)')
 parser.add_argument('--hf_revision', default=None,
-                    help='HuggingFace dataset revision (branch name or commit hash)')
+                    help='Hugging Face validation revision (branch name or commit hash)')
+parser.add_argument('--hf_test_revision', default=None,
+                    help='Hugging Face test revision (defaults to --hf_revision)')
 parser.add_argument('--cache_dir', default=None,
-                    help='Cache directory for HuggingFace datasets')
+                    help='Cache directory for Hugging Face datasets')
 parser.add_argument('--sample', type=int, default=None,
                     help='Number of samples to process (for quick testing)')
 parser.add_argument('--start_index', type=int, default=0,
@@ -56,6 +62,8 @@ parser.add_argument('--use_base_prompt', action='store_true',
                     help='Whether to use base prompt for inference')
 parser.add_argument('--max_workers', type=int, default=None,
                     help='Number of parallel workers for inference (if not set, uses model-specific default)')
+parser.add_argument('--dataset_family', choices=('vision', 'antifraud'), default='vision',
+                    help='Hugging Face benchmark family to load (default: vision)')
 args = parser.parse_args()
 
 # Configuration constants
@@ -107,9 +115,11 @@ try:
         base_path=args.base_path,
         hf_token=args.hf_token or os.environ.get('HF_TOKEN'),
         hf_revision=args.hf_revision,
+        hf_test_revision=args.hf_test_revision,
         cache_dir=args.cache_dir,
         sample=args.sample,
-        silent=False
+        silent=False,
+        dataset_family=args.dataset_family
     )
     logging.info(f"Loaded {len(datasets)} dataset(s): {split_names}")
 except Exception as e:
@@ -138,7 +148,7 @@ def run_inference_and_eval(dataset: List[Dict[str, Any]], output_prefix: str,
     
     # Run inference
     inference_cmd = [
-        "python", INFERENCE_SCRIPT,
+        sys.executable, INFERENCE_SCRIPT,
         "--model_name", args.model_name,
         "--data_path", temp_data_path,
         "--start_index", str(args.start_index),
@@ -160,7 +170,7 @@ def run_inference_and_eval(dataset: List[Dict[str, Any]], output_prefix: str,
     if args.max_workers is not None:
         inference_cmd.extend(["--max_workers", str(args.max_workers)])
 
-    # Run inference up to 3 times - in case some questions will require one more attempt
+    # Run inference up to 2 times in case some questions need one retry.
     for attempt in range(2):
         logging.info(f"Running {INFERENCE_SCRIPT} for {temp_data_path} (attempt {attempt + 1})...")
         subprocess.run(inference_cmd, check=True)
@@ -178,7 +188,7 @@ def run_inference_and_eval(dataset: List[Dict[str, Any]], output_prefix: str,
 
     # Run eval with updated version
     eval_cmd = [
-        "python", "src/evaluation/eval_parallel.py",
+        sys.executable, "src/evaluation/eval_parallel.py",
         "--input_path", raw_output_path,
         "--output_path", eval_output_path
     ]
@@ -205,10 +215,14 @@ for i, (dataset, split_name) in enumerate(zip(datasets, split_names)):
 # Calculate metrics for each processed part
 logging.info("Calculating metrics for each part...")
 metrics_list: List[Dict[str, Any]] = []
+summary_scores: List[float] = []
 for i, eval_path in enumerate(eval_paths):
     logging.info(f"Calculating metrics for part {i+1}: {eval_path}")
-    metrics, _ = get_metrics(eval_path)
+    metrics, detailed = get_metrics(eval_path)
     metrics_list.append(metrics)
+    summary_scores.append(
+        get_summary_score(metrics, detailed, args.dataset_family)
+    )
 
 # Combine results if multiple datasets were processed
 if len(datasets) == 2:
@@ -229,8 +243,15 @@ if len(datasets) == 2:
     
     # Calculate metrics for combined results
     logging.info("Calculating combined metrics...")
-    combined_metrics, _ = get_metrics(combined_eval_output)
+    combined_metrics, combined_detailed = get_metrics(combined_eval_output)
     metrics_list.append(combined_metrics)
+    summary_scores.append(
+        get_summary_score(
+            combined_metrics,
+            combined_detailed,
+            args.dataset_family,
+        )
+    )
 
 # Generate and display results summary table
 logging.info("Generating results summary table...")
@@ -257,15 +278,11 @@ for metric in sorted(all_metrics):
             row.append(str(score))
     table.add_row(row)
 
-# Calculate and add average scores row
-average_row = ["average"]
-for metrics in metrics_list:
-    numeric_scores = [
-        score for metric in sorted(all_metrics)
-        if (score := metrics.get(metric)) is not None and isinstance(score, float)
-    ]
-    avg_score = sum(numeric_scores) / len(numeric_scores) if numeric_scores else 0.0
-    average_row.append(f"{avg_score:.3f}")
+# Add the five-category Overall for the vision family, or AF for antifraud.
+summary_label = "Anti-fraud" if args.dataset_family == "antifraud" else "Overall"
+average_row = [summary_label]
+for score in summary_scores:
+    average_row.append(f"{score:.3f}")
 table.add_row(average_row)
 
 # Display final results
@@ -274,4 +291,4 @@ logging.info("\n" + str(table))
 
 logging.info("Benchmark pipeline completed successfully!")
 logging.info(f"Results saved to: {results_dir}")
-logging.info(f"Log file: {log_path}") 
+logging.info(f"Log file: {log_path}")

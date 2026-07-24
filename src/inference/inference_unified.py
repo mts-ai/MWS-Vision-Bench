@@ -1,5 +1,5 @@
 """
-MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+MWSVisionBench - Russian document benchmark for multimodal LLMs
 
 This file: Unified inference script that automatically selects the appropriate API implementation.
 Single entry point for all model types.
@@ -10,7 +10,6 @@ Licensed under MIT License
 
 # Standard library imports
 import argparse
-import os
 import sys
 from pathlib import Path
 
@@ -19,10 +18,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.inference.api_inference import OpenAIInference
-from src.inference.gigachat_inference import GigaChatInference
-from src.inference.inference_base import InferenceBase
-from src.inference.aliceaivlm_inference import AliceAiVlmInference
+from src.inference.inference_base import InferenceBase  # noqa: E402
 
 
 def create_inference_handler(model_name: str) -> InferenceBase:
@@ -35,20 +31,24 @@ def create_inference_handler(model_name: str) -> InferenceBase:
         from src.inference.responses_inference import ResponsesInference
         return ResponsesInference()
     
-    # GPT-5 family (mini, nano) goes to regular OpenAI Completions API
+    # Other GPT-5-prefixed model IDs use the OpenAI-compatible chat endpoint.
     elif model_name.startswith('gpt-5-'):
+        from src.inference.api_inference import OpenAIInference
         return OpenAIInference()
 
     # AliceAiVlm
     elif 'aliceaivlm' in model_lower:
+        from src.inference.aliceaivlm_inference import AliceAiVlmInference
         return AliceAiVlmInference()
 
     # GigaChat
     elif 'gigachat' in model_lower:
+        from src.inference.gigachat_inference import GigaChatInference
         return GigaChatInference()
     
     # Default: OpenAI-compatible (vLLM, OpenAI, etc.)
     else:
+        from src.inference.api_inference import OpenAIInference
         return OpenAIInference()
 
 

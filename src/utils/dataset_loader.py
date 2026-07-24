@@ -1,7 +1,8 @@
-"""Dataset loader with graceful HuggingFace fallback
+"""Dataset loader with graceful Hugging Face fallback
 
-This module provides smart dataset loading for MWS-Vision-Bench:
-- Automatic download from HuggingFace (default)
+This module loads the core MWS-Vision-Bench datasets or the experimental
+MWS-Antifraud-Bench datasets:
+- Automatic download from Hugging Face (default)
 - Graceful fallback if test set is not accessible
 - Support for local files (development mode)
 - Sample mode for quick testing
@@ -12,8 +13,19 @@ Licensed under MIT License
 
 import os
 import json
-from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
+
+
+HF_DATASET_REPOSITORIES = {
+    "vision": (
+        "MTSAIR/MWS-Vision-Bench",
+        "MTSAIR/MWS-Vision-Bench-Test",
+    ),
+    "antifraud": (
+        "MTSAIR/MWS-Antifraud-Bench",
+        "MTSAIR/MWS-Antifraud-Bench-Test",
+    ),
+}
 
 
 def load_benchmark_datasets(
@@ -21,27 +33,31 @@ def load_benchmark_datasets(
     base_path: Optional[str] = None,
     hf_token: Optional[str] = None,
     hf_revision: Optional[str] = None,
+    hf_test_revision: Optional[str] = None,
     cache_dir: Optional[str] = None,
     sample: Optional[int] = None,
-    silent: bool = True
+    silent: bool = True,
+    dataset_family: str = "vision"
 ) -> Tuple[List[List[Dict[str, Any]]], List[str]]:
     """
-    Load benchmark datasets with smart fallback logic.
+    Load one benchmark family with graceful private-test fallback.
     
     Priority:
     1. If data_paths provided → load local JSON files (requires base_path)
-    2. Otherwise → download from HuggingFace with graceful fallback:
+    2. Otherwise → download from Hugging Face with graceful fallback:
        - Always loads public validation set
        - Tries to load private test set (silently skips if no access)
     
     Args:
-        data_paths: Local JSON file paths (if None, use HuggingFace)
+        data_paths: Local JSON file paths (if None, use Hugging Face)
         base_path: Base path for local images (required with data_paths)
-        hf_token: HuggingFace token (for private test set access)
-        hf_revision: HuggingFace dataset revision (branch or commit hash)
+        hf_token: Hugging Face token (for private test set access)
+        hf_revision: Validation dataset revision (branch or commit hash)
+        hf_test_revision: Test dataset revision. Defaults to ``hf_revision``.
         cache_dir: Cache directory for HF datasets (default: ~/.cache/huggingface)
         sample: Number of samples to load (for quick testing)
         silent: If True, no warnings for missing test access
+        dataset_family: ``vision`` or ``antifraud`` Hugging Face repositories
         
     Returns:
         Tuple of (datasets, split_names):
@@ -49,7 +65,7 @@ def load_benchmark_datasets(
         - split_names: Names of splits (e.g., ['validation', 'test'])
         
     Examples:
-        # Load from HuggingFace (default)
+        # Load from Hugging Face (default)
         datasets, names = load_benchmark_datasets()
         
         # Load with test set (requires token)
@@ -69,8 +85,16 @@ def load_benchmark_datasets(
     if data_paths is not None:
         return _load_local_datasets(data_paths, base_path, sample)
     
-    # HuggingFace mode (default)
-    return _load_hf_datasets(hf_token, hf_revision, cache_dir, sample, silent)
+    # Hugging Face mode (default)
+    return _load_hf_datasets(
+        hf_token,
+        hf_revision,
+        hf_test_revision,
+        cache_dir,
+        sample,
+        silent,
+        dataset_family=dataset_family,
+    )
 
 
 def _load_local_datasets(
@@ -121,23 +145,33 @@ def _load_local_datasets(
 def _load_hf_datasets(
     hf_token: Optional[str],
     hf_revision: Optional[str],
+    hf_test_revision: Optional[str],
     cache_dir: Optional[str],
     sample: Optional[int],
-    silent: bool
+    silent: bool,
+    dataset_family: str = "vision"
 ) -> Tuple[List[List[Dict[str, Any]]], List[str]]:
-    """Load datasets from HuggingFace with graceful fallback.
+    """Load datasets from Hugging Face with graceful fallback.
     
     Args:
-        hf_token: HuggingFace token for private datasets
-        hf_revision: HuggingFace dataset revision (branch or commit hash)
+        hf_token: Hugging Face token for private datasets
+        hf_revision: Validation dataset revision (branch or commit hash)
+        hf_test_revision: Test dataset revision. Defaults to ``hf_revision``.
         cache_dir: Cache directory
         sample: Number of samples to load
         silent: Suppress warnings
+        dataset_family: ``vision`` or ``antifraud`` Hugging Face repositories
         
     Returns:
         Tuple of (datasets, split_names)
     """
     
+    if dataset_family not in HF_DATASET_REPOSITORIES:
+        raise ValueError(
+            f"Unsupported dataset_family={dataset_family!r}; "
+            f"expected one of {sorted(HF_DATASET_REPOSITORIES)}"
+        )
+
     # Check if datasets library is available
     try:
         from datasets import load_dataset
@@ -146,7 +180,12 @@ def _load_hf_datasets(
             "❌ 'datasets' package not found!\n"
             "   Install it with: pip install datasets"
         )
-    
+
+    validation_repo, test_repo = HF_DATASET_REPOSITORIES[dataset_family]
+    resolved_test_revision = (
+        hf_test_revision if hf_test_revision is not None else hf_revision
+    )
+
     datasets = []
     split_names = []
     
@@ -154,28 +193,32 @@ def _load_hf_datasets(
     split_str = "train" if sample is None else f"train[:{sample}]"
     
     # 1. Load validation set (public - always works)
-    print("📥 Downloading validation dataset from HuggingFace...")
+    print("📥 Downloading validation dataset from Hugging Face...")
     if sample:
         print(f"   ↳ Sampling first {sample} examples")
     
     try:
         val_dataset = load_dataset(
-            "MTSAIR/MWS-Vision-Bench",
+            validation_repo,
             split=split_str,
             revision=hf_revision,
             cache_dir=cache_dir,
             token=hf_token
         )
-        val_data = _convert_hf_to_list(val_dataset, split_name="validation")
+        val_data = _convert_hf_to_list(
+            val_dataset,
+            split_name="validation",
+            cache_namespace=dataset_family,
+        )
         datasets.append(val_data)
         split_names.append("validation")
         print(f"✅ Validation dataset loaded ({len(val_data)} examples)")
     except Exception as e:
         raise RuntimeError(
-            f"❌ Failed to load validation dataset from HuggingFace.\n"
+            f"❌ Failed to load validation dataset from Hugging Face.\n"
             f"   Error: {e}\n"
             f"   Please check your internet connection.\n"
-            f"   Dataset: https://huggingface.co/datasets/MTSAIR/MWS-Vision-Bench"
+            f"   Dataset: https://huggingface.co/datasets/{validation_repo}"
         )
     
     # 2. Try to load test set (private - graceful fallback)
@@ -183,20 +226,27 @@ def _load_hf_datasets(
         print("📥 Attempting to download test dataset (private)...")
         try:
             test_dataset = load_dataset(
-                "MTSAIR/MWS-Vision-Bench-Test",
+                test_repo,
                 split=split_str,
-                revision=hf_revision,
+                revision=resolved_test_revision,
                 cache_dir=cache_dir,
                 token=hf_token
             )
-            test_data = _convert_hf_to_list(test_dataset, split_name="test")
+            test_data = _convert_hf_to_list(
+                test_dataset,
+                split_name="test",
+                cache_namespace=dataset_family,
+            )
             datasets.append(test_data)
             split_names.append("test")
             print(f"✅ Test dataset loaded ({len(test_data)} examples)")
-        except Exception as e:
+        except Exception:
             if not silent:
-                print(f"ℹ️  Test dataset not accessible (this is normal for public users)")
-                print(f"   Continuing with validation set only...")
+                print(
+                    "ℹ️  Test dataset not accessible "
+                    "(this is normal for public users)"
+                )
+                print("   Continuing with validation set only...")
     else:
         # No token provided - silently skip test set
         if not silent:
@@ -206,12 +256,17 @@ def _load_hf_datasets(
     return datasets, split_names
 
 
-def _convert_hf_to_list(hf_dataset, split_name: str = "default") -> List[Dict[str, Any]]:
-    """Convert HuggingFace dataset to list of dictionaries with cached images.
+def _convert_hf_to_list(
+    hf_dataset,
+    split_name: str = "default",
+    cache_namespace: str = "vision",
+) -> List[Dict[str, Any]]:
+    """Convert a Hugging Face dataset to dictionaries with cached images.
     
     Args:
-        hf_dataset: HuggingFace Dataset object
+        hf_dataset: Hugging Face Dataset object
         split_name: Name of the split (validation/test) to avoid cache collisions
+        cache_namespace: Dataset family used to isolate cached images
         
     Returns:
         List of dictionaries with dataset entries and local image paths
@@ -225,7 +280,12 @@ def _convert_hf_to_list(hf_dataset, split_name: str = "default") -> List[Dict[st
     
     # Create cache directory for HF images with split name to avoid collisions
     # Different splits (validation/test) will have separate cache directories
-    cache_dir = os.path.join(tempfile.gettempdir(), "mws_vision_bench_cache", split_name)
+    cache_dir = os.path.join(
+        tempfile.gettempdir(),
+        "mws_vision_bench_cache",
+        cache_namespace,
+        split_name,
+    )
     os.makedirs(cache_dir, exist_ok=True)
     
     # Track image hashes to avoid saving duplicates
@@ -304,13 +364,15 @@ def _convert_hf_to_list(hf_dataset, split_name: str = "default") -> List[Dict[st
 
 def get_dataset_info(
     data_paths: Optional[List[str]] = None,
-    hf_token: Optional[str] = None
+    hf_token: Optional[str] = None,
+    dataset_family: str = "vision",
 ) -> Dict[str, Any]:
     """Get information about available datasets without loading them.
     
     Args:
         data_paths: Local file paths to check
-        hf_token: HuggingFace token for checking private access
+        hf_token: Hugging Face token for checking private access
+        dataset_family: ``vision`` or ``antifraud`` Hugging Face repositories
         
     Returns:
         Dictionary with dataset availability information
@@ -330,7 +392,13 @@ def get_dataset_info(
         info["message"] = f"Local files: {data_paths}"
         return info
     
-    # Check HuggingFace access
+    # Check Hugging Face access
+    if dataset_family not in HF_DATASET_REPOSITORIES:
+        raise ValueError(
+            f"Unsupported dataset_family={dataset_family!r}; "
+            f"expected one of {sorted(HF_DATASET_REPOSITORIES)}"
+        )
+    _, test_repo = HF_DATASET_REPOSITORIES[dataset_family]
     info["source"] = "huggingface"
     info["validation_available"] = True  # Public dataset
     
@@ -338,10 +406,10 @@ def get_dataset_info(
         try:
             from datasets import load_dataset
             # Try to access test dataset
-            load_dataset("MTSAIR/MWS-Vision-Bench-Test", split="train[:1]", token=hf_token)
+            load_dataset(test_repo, split="train[:1]", token=hf_token)
             info["test_available"] = True
             info["message"] = "Full access: validation + test"
-        except:
+        except Exception:
             info["test_available"] = False
             info["message"] = "Public access: validation only"
     else:
@@ -349,4 +417,3 @@ def get_dataset_info(
         info["message"] = "Public access: validation only (set HF_TOKEN for test set)"
     
     return info
-

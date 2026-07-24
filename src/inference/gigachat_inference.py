@@ -1,5 +1,5 @@
 """
-MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+MWSVisionBench - Russian document benchmark for multimodal LLMs
 
 This file: GigaChat inference implementation using the unified base class
 
@@ -58,7 +58,7 @@ class GigaChatInference(InferenceBase):
         if not self.api_key:
             raise ValueError("GIGACHAT_KEY not provided. Set it via --api_key or environment variable.")
         
-        print("Loaded GIGACHAT_KEY =", self.api_key[:10] + "..." if self.api_key else "None")
+        print("Loaded API credentials")
         
         # Initialize client
         self.client = GigaChat(

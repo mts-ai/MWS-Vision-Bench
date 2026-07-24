@@ -1,12 +1,14 @@
 """
-MWSVisionBench - Russian OCR benchmark for multimodal LLMs
+MWSVisionBench - Russian document benchmark for multimodal LLMs
 
-This file: Simplified evaluation script for 5 task types:
+This file: Evaluation script for the five document-understanding task types
+plus the experimental anti-fraud category:
 - text grounding ru
 - reasoning VQA ru  
 - full-page OCR ru
 - document parsing ru
 - key information extraction ru
+- antifraud ru
 
 Copyright (c) 2024 MWS AI
 Licensed under MIT License
@@ -15,10 +17,38 @@ Licensed under MIT License
 # Standard library imports
 import argparse
 import json
+import re
 import time
 import warnings
 from multiprocessing import Pool, cpu_count
-from typing import Any, Dict, List
+from typing import Any, Dict
+
+# Third-party imports
+from tqdm import tqdm
+
+# Local application imports. The fallback keeps direct script execution
+# compatible with ``python src/evaluation/eval_parallel.py``.
+try:
+    from .metrics.iou_metric import calculate_iou, extract_coordinates
+    from .metrics.page_ocr_metric import cal_per_metrics, ensure_wordnet
+    from .metrics.teds_metric import (
+        compute_f1_score,
+        convert_str_to_dict,
+        doc_parsing_evaluation,
+        generate_combinations,
+    )
+    from .metrics.vqa_metric import vqa_evaluation
+except ImportError:
+    from metrics.iou_metric import calculate_iou, extract_coordinates
+    from metrics.page_ocr_metric import cal_per_metrics, ensure_wordnet
+    from metrics.teds_metric import (
+        compute_f1_score,
+        convert_str_to_dict,
+        doc_parsing_evaluation,
+        generate_combinations,
+    )
+    from metrics.vqa_metric import vqa_evaluation
+
 
 # Suppress specific warnings that clutter output
 warnings.filterwarnings('ignore', message='.*pkg_resources.*')
@@ -26,20 +56,39 @@ warnings.filterwarnings('ignore', message='.*BLEU score.*')
 warnings.filterwarnings('ignore', category=UserWarning, module='jieba')
 warnings.filterwarnings('ignore', category=UserWarning, module='nltk')
 
-# Third-party imports
-from tqdm import tqdm
 
-# Local application imports
-from metrics.iou_metric import calculate_iou, extract_coordinates
-from metrics.page_ocr_metric import cal_per_metrics
-from metrics.teds_metric import (
-    TEDS, 
-    compute_f1_score, 
-    convert_str_to_dict, 
-    doc_parsing_evaluation, 
-    generate_combinations
-)
-from metrics.vqa_metric import vqa_evaluation
+def _parse_antifraud_predict(raw_predict: str) -> Dict[str, Any]:
+    """Parse the JSON answer produced for an anti-fraud item."""
+    valid_labels = {"ai_gen", "edited", "original"}
+    if not isinstance(raw_predict, str):
+        return {"predicted_label": None, "arguments": ""}
+
+    raw = re.sub(r"<think>.*?</think>", "", raw_predict, flags=re.DOTALL).strip()
+    if raw.startswith("```"):
+        lines = raw.splitlines()
+        raw = "\n".join(
+            lines[1:-1] if lines and lines[-1].strip() == "```" else lines[1:]
+        )
+
+    parsed = None
+    try:
+        parsed = json.loads(raw)
+    except (json.JSONDecodeError, ValueError):
+        start, end = raw.find("{"), raw.rfind("}")
+        if start != -1 and end > start:
+            try:
+                parsed = json.loads(raw[start:end + 1])
+            except (json.JSONDecodeError, ValueError):
+                parsed = None
+
+    if not isinstance(parsed, dict):
+        return {"predicted_label": None, "arguments": ""}
+
+    label = str(parsed.get("label", "")).strip().lower()
+    return {
+        "predicted_label": label if label in valid_labels else None,
+        "arguments": str(parsed.get("arguments", "")).strip(),
+    }
 
 
 def is_nan_value(value: Any) -> bool:
@@ -59,7 +108,7 @@ def is_nan_value(value: Any) -> bool:
 
 
 def process_single_item(data_item: Dict[str, Any]) -> Dict[str, Any]:
-    """Process a single evaluation item for our 5 task types.
+    """Process a single evaluation item for a supported task type.
     
     Args:
         data_item: Dictionary containing item data with 'type', 'predict', etc.
@@ -73,6 +122,15 @@ def process_single_item(data_item: Dict[str, Any]) -> Dict[str, Any]:
     predict = data_item.get("predict", "")
     if isinstance(predict, str) and predict == "ERROR in getting response":
         data_item["score"] = 0.0
+        if data_item.get("type") == "antifraud ru":
+            data_item.update(
+                {
+                    "predicted_label": None,
+                    "arguments": "",
+                    "correct": False,
+                    "reason_score": 0.0,
+                }
+            )
         data_item["eval_time"] = time.time() - start_time
         return data_item
     
@@ -175,6 +233,29 @@ def process_single_item(data_item: Dict[str, Any]) -> Dict[str, Any]:
             except Exception as e:
                 print(f"Error in key extraction for item {data_item.get('id', 'unknown')}: {e}")
                 data_item["score"] = 0
+
+    elif task_type == "antifraud ru":
+        parsed = _parse_antifraud_predict(data_item.get("predict", ""))
+        data_item.update(parsed)
+        ground_truth = data_item.get("dataset_name", "")
+        data_item["correct"] = parsed["predicted_label"] == ground_truth
+        data_item["score"] = 1.0 if data_item["correct"] else 0.0
+
+        reason_answers = data_item.get("answers") or []
+        if ground_truth == "edited" and reason_answers:
+            try:
+                data_item["reason_score"] = vqa_evaluation(
+                    parsed["arguments"],
+                    reason_answers,
+                )
+            except Exception as e:
+                print(
+                    "Error in anti-fraud reason evaluation for item "
+                    f"{data_item.get('id', 'unknown')}: {e}"
+                )
+                data_item["reason_score"] = 0.0
+        else:
+            data_item["reason_score"] = 0.0
     
     else:
         raise ValueError(f"Unknown task type: {task_type}")
@@ -213,64 +294,13 @@ def evaluate_parallel(data_list, num_processes=None):
     return results
 
 
-def calculate_metrics(results: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Calculate metrics for each task type.
-    
-    Args:
-        results: List of processed evaluation items with scores
-        
-    Returns:
-        Dictionary containing calculated metrics and summary statistics
-    """
-    task_metrics = {}
-    
-    # Group by task type
-    for item in results:
-        task_type = item["type"]
-        if task_type not in task_metrics:
-            task_metrics[task_type] = []
-        
-        # Ensure score is a number, not dict or other type
-        score = item.get("score", 0)
-        if isinstance(score, (int, float)):
-            task_metrics[task_type].append(score)
-        else:
-            print(f"WARNING: Non-numeric score in item {item.get('id', 'unknown')}: {score}")
-            task_metrics[task_type].append(0)
-    
-    # Calculate average for each type
-    summary = {}
-    total_score = 0
-    total_count = 0
-    
-    for task_type, scores in task_metrics.items():
-        avg_score = sum(scores) / len(scores) if scores else 0
-        summary[task_type] = {
-            "avg_score": avg_score,
-            "count": len(scores),
-            "total_score": sum(scores)
-        }
-        total_score += sum(scores)
-        total_count += len(scores)
-        
-        # Don't print here - leave it for run_benchmark.py
-        pass
-    
-    # Overall average
-    overall_avg = total_score / total_count if total_count > 0 else 0
-    summary["overall"] = {
-        "avg_score": overall_avg,
-        "count": total_count,
-        "total_score": total_score
-    }
-    
-    return summary
-
-
 def main() -> None:
     """Main function for command line interface."""
     parser = argparse.ArgumentParser(
-        description="MWSVisionBench evaluation for 5 Russian OCR task types"
+        description=(
+            "MWSVisionBench evaluation for five Russian OCR task types "
+            "and experimental anti-fraud"
+        )
     )
     parser.add_argument("--input_path", required=True, help="Path to input JSON file")
     parser.add_argument("--output_path", required=True, help="Path to output JSON file")
@@ -295,7 +325,8 @@ def main() -> None:
         "reasoning VQA ru", 
         "full-page OCR ru", 
         "document parsing ru", 
-        "key information extraction ru"
+        "key information extraction ru",
+        "antifraud ru"
     }
     
     unsupported = task_types - supported_types
@@ -305,12 +336,15 @@ def main() -> None:
         original_count = len(data_list)
         data_list = [item for item in data_list if item["type"] in supported_types]
         print(f"Filtered to {len(data_list)} items (removed {original_count - len(data_list)} unsupported)")
+
+    # Prepare the pinned WordNet corpus once in the parent process. OCR workers
+    # then reuse the same verified archive instead of racing to download it.
+    if "full-page OCR ru" in task_types:
+        print("Preparing NLTK WordNet corpus for the OCR/METEOR metric...")
+        ensure_wordnet()
     
     # Evaluate
     results = evaluate_parallel(data_list, args.num_processes)
-    
-    # Calculate metrics (no printing here)
-    metrics = calculate_metrics(results)
     
     # Save results
     print(f"\nSaving results to {args.output_path}")
