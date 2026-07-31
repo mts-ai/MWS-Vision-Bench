@@ -258,6 +258,13 @@ python run_benchmark.py \
     --api_key "your-openai-key" \
     --sample 100
 
+# Add deterministic 95% bootstrap confidence intervals
+python run_benchmark.py \
+    --model_name "gpt-4o-mini" \
+    --api_key "your-openai-key" \
+    --bootstrap-samples 2000 \
+    --bootstrap-seed 42
+
 # GigaChat Max
 python run_benchmark.py \
     --model_name "gigachat-max" \
@@ -303,6 +310,20 @@ Results are automatically saved to:
 - `results/{test_name}/{model_name}_validation_eval.json` - validation metrics
 - `results/{test_name}/{model_name}_test_eval.json` - test metrics (if accessible)
 - `logs/{test_name}.log` - execution logs
+
+`Overall` is leaderboard-comparable only when all five core task categories
+are present. Runs produced with a narrow sample or a custom dataset are labeled
+`Partial Overall` when one or more categories are missing. The evaluator also
+reports the missing categories and warns about unknown task types instead of
+silently including an incomplete score in benchmark comparisons.
+
+Pass `--bootstrap-samples N` to report percentile confidence intervals for
+each metric and the summary score. Resampling is independent within each of
+the five vision categories, so `Overall` remains their macro-average. The
+anti-fraud score is resampled within its three classes. Set
+`--bootstrap-seed` for reproducible intervals and `--confidence-level` to
+change the default 0.95 level. Confidence intervals on a `Partial Overall`
+describe only the categories present and do not make it leaderboard-comparable.
 
 ### Experimental anti-fraud category
 

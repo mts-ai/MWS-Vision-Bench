@@ -21,7 +21,11 @@ from typing import List, Dict, Any
 from prettytable import PrettyTable
 
 # Local application imports
-from src.evaluation.get_score_ru import get_metrics, get_summary_score
+from src.evaluation.get_score_ru import (
+    format_score,
+    get_metrics,
+    get_summary_score,
+)
 from src.utils.dataset_loader import load_benchmark_datasets
 
 # Setup command line argument parser
@@ -64,6 +68,15 @@ parser.add_argument('--max_workers', type=int, default=None,
                     help='Number of parallel workers for inference (if not set, uses model-specific default)')
 parser.add_argument('--dataset_family', choices=('vision', 'antifraud'), default='vision',
                     help='Hugging Face benchmark family to load (default: vision)')
+parser.add_argument('--bootstrap-samples', '--bootstrap_samples',
+                    dest='bootstrap_samples', type=int, default=0,
+                    help='Number of bootstrap replicates for confidence intervals')
+parser.add_argument('--bootstrap-seed', '--bootstrap_seed',
+                    dest='bootstrap_seed', type=int, default=42,
+                    help='Random seed for bootstrap resampling (default: 42)')
+parser.add_argument('--confidence-level', '--confidence_level',
+                    dest='confidence_level', type=float, default=0.95,
+                    help='Bootstrap confidence level (default: 0.95)')
 args = parser.parse_args()
 
 # Configuration constants
@@ -215,11 +228,18 @@ for i, (dataset, split_name) in enumerate(zip(datasets, split_names)):
 # Calculate metrics for each processed part
 logging.info("Calculating metrics for each part...")
 metrics_list: List[Dict[str, Any]] = []
+details_list: List[Dict[str, Any]] = []
 summary_scores: List[float] = []
 for i, eval_path in enumerate(eval_paths):
     logging.info(f"Calculating metrics for part {i+1}: {eval_path}")
-    metrics, detailed = get_metrics(eval_path)
+    metrics, detailed = get_metrics(
+        eval_path,
+        bootstrap_samples=args.bootstrap_samples,
+        bootstrap_seed=args.bootstrap_seed,
+        confidence_level=args.confidence_level,
+    )
     metrics_list.append(metrics)
+    details_list.append(detailed)
     summary_scores.append(
         get_summary_score(metrics, detailed, args.dataset_family)
     )
@@ -243,8 +263,14 @@ if len(datasets) == 2:
     
     # Calculate metrics for combined results
     logging.info("Calculating combined metrics...")
-    combined_metrics, combined_detailed = get_metrics(combined_eval_output)
+    combined_metrics, combined_detailed = get_metrics(
+        combined_eval_output,
+        bootstrap_samples=args.bootstrap_samples,
+        bootstrap_seed=args.bootstrap_seed,
+        confidence_level=args.confidence_level,
+    )
     metrics_list.append(combined_metrics)
+    details_list.append(combined_detailed)
     summary_scores.append(
         get_summary_score(
             combined_metrics,
@@ -270,20 +296,60 @@ for metrics in metrics_list:
 # Populate table with metric scores
 for metric in sorted(all_metrics):
     row = [metric]
-    for metrics in metrics_list:
+    for metrics, details in zip(metrics_list, details_list):
         score = metrics.get(metric, "-")
         if isinstance(score, float):
-            row.append(f"{score:.3f}")
+            bootstrap_details = details.get("bootstrap", {})
+            interval = bootstrap_details.get("metrics", {}).get(metric)
+            row.append(
+                format_score(score, interval, args.confidence_level)
+            )
         else:
             row.append(str(score))
     table.add_row(row)
 
 # Add the five-category Overall for the vision family, or AF for antifraud.
-summary_label = "Anti-fraud" if args.dataset_family == "antifraud" else "Overall"
+if args.dataset_family == "antifraud":
+    summary_label = "Anti-fraud"
+elif all(
+    details["overall"]["coverage_complete"]
+    for details in details_list
+):
+    summary_label = "Overall"
+else:
+    summary_label = "Partial Overall"
 average_row = [summary_label]
-for score in summary_scores:
-    average_row.append(f"{score:.3f}")
+for score, details in zip(summary_scores, details_list):
+    bootstrap_details = details.get("bootstrap", {})
+    interval_key = (
+        "antifraud" if args.dataset_family == "antifraud" else "overall"
+    )
+    average_row.append(
+        format_score(
+            score,
+            bootstrap_details.get(interval_key),
+            args.confidence_level,
+        )
+    )
 table.add_row(average_row)
+
+for split_name, details in zip(column_headers, details_list):
+    unknown_task_types = details["unknown_task_types"]
+    if unknown_task_types:
+        logging.warning(
+            "Ignored unknown task types for %s: %s",
+            split_name,
+            unknown_task_types,
+        )
+    if (
+        args.dataset_family == "vision"
+        and not details["overall"]["coverage_complete"]
+    ):
+        logging.warning(
+            "%s is not leaderboard-comparable; missing categories: %s",
+            split_name,
+            details["overall"]["missing_categories"],
+        )
 
 # Display final results
 logging.info("BENCHMARK RESULTS SUMMARY")
